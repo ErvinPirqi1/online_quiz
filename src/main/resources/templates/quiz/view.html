@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Details</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+
+<!-- Quiz Details Section -->
+<div class="container mt-5">
+    <div class="row">
+        <!-- Quiz Image -->
+        <div class="col-md-4">
+            <img th:src="@{${quiz.img}}" class="img-fluid" alt="Quiz Image">
+        </div>
+
+        <!-- Quiz Information -->
+        <div class="col-md-8">
+            <h2 th:text="${quiz.title}"></h2>
+            <p class="text-muted" th:text="'Category: ' + ${quiz.category}"></p>
+            <p class="text-muted" th:text="'Created by: ' + ${quiz.createdBy}"></p>
+            <p class="text-muted" th:text="'Views: ' + ${quiz.description}"></p>
+
+            <p th:text="${quiz.description}"></p>
+
+            <!-- Start Quiz Button -->
+            <a th:href="@{'/quiz/start/' + ${quiz.id}}" class="btn btn-primary">Start Quiz</a>
+            <a th:href="@{'/question/details/' + ${quiz.id}}" class="btn btn-primary">view Quiz</a>
+
+        </div>
+    </div>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

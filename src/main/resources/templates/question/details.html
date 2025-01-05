@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en" th:replace="~{shared/_layout::layout('Home Page', ~{::div#cont}, ~{::style#css}, ~{::script#scr})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Quiz Details</title>
+
+    <style id="css">
+        .container {
+            max-width: 800px; /* Restrict the width of the content for a clean centered look */
+            margin: 0 auto; /* Center the container */
+        }
+
+        .card {
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        .questions h2 {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #007bff;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .list-group-item {
+            border: none;
+            padding: 10px 15px;
+        }
+
+        .btn-primary, .btn-success {
+            border-radius: 5px;
+        }
+
+        .text-end {
+            text-align: end;
+        }
+
+        .text-success {
+            font-size: 1.5rem;
+        }
+
+        @media (max-width: 768px) {
+            .card-body {
+                padding: 15px;
+            }
+
+            .questions h2 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container mt-5" id="cont">
+    <!-- Quiz Title and Description -->
+    <div class="card mb-4 shadow">
+        <div class="card-body text-center">
+            <h1 class="card-title" th:text="${quiz.title}">Quiz Title</h1>
+            <p class="card-text text-muted" th:text="${quiz.description}">Quiz Description</p>
+        </div>
+    </div>
+
+    <!-- Questions Section -->
+    <div class="questions">
+        <h2>Questions</h2>
+
+        <!-- Loop through each question -->
+        <div th:each="question : ${question}" class="card mb-4 shadow">
+            <div class="card-body">
+                <p class="card-text font-weight-bold" th:text="${question.question}">Question Text</p>
+                <p th:if="${question.questionType} == 1">Type: Multiple Choice</p>
+                <p th:if="${question.questionType} == 0">Type: True/False</p>
+
+                <ul class="list-group list-group-flush mb-3">
+                    <li th:each="answer : ${answersMap[question.id]}"
+                        class="list-group-item d-flex justify-content-between align-items-center">
+                        <span th:text="${answer.optionText}" class="text-success">Answer Text</span>
+                        <i th:text="${answer.isCorrect} ? '✅' : '❌'" class="text-success"></i>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Question Button -->
+    <div class="text-end mt-4">
+        <a th:href="@{/quiz/{quizId}/question/create(quizId=${quiz.id})}"
+           class="btn btn-success">
+            Add Question
+        </a>
+    </div>
+</div>
+
+<script id="scr"></script>
+</body>
+</html>
