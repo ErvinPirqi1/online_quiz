@@ -74,7 +74,7 @@
             <a th:href="@{/quiz/create}" class="add-quiz-btn">+ Add New Quiz</a>
         </div>
 
-        <!-- Recent Quizzes Section -->
+         Recent Quizzes Section
         <div class="container">
             <h2>Recent Quizzes</h2>
 
@@ -93,7 +93,7 @@
                             <div class="card-body">
                                 <h5 class="card-title text-primary" th:text="${quiz.title}">Quiz Title</h5>
                                 <p class="card-text" th:text="${quiz.description}">Quiz Description</p>
-                                <p class="card-text"><strong>Author:</strong> <span th:text="${quiz.createdBy}">Author Name</span></p>
+                                <p class="card-text"><strong>Author:</strong> <span th:text="${quiz.createdByUsername}">Author Name</span></p>
                                 <p class="card-text"><strong>Category:</strong> <span th:text="${quiz.category}">Quiz Category</span></p>
                             </div>
                             <!-- Card Footer -->

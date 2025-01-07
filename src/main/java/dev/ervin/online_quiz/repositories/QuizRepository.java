@@ -16,10 +16,8 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     Optional<Quiz> findByTitle(String title);
     //select * from quiz where title = ?
 
-    List<Quiz> findTop9ByOrderById();
 
+    List<Quiz> findTop9ByOrderByCreatedAtDesc();
+//select * from quiz order by created_at desc limit 9
 
-
-//    List<Quiz> findAllByUserId(Long userId);
-//    //select * from quiz order by created_at desc limit 5
 }

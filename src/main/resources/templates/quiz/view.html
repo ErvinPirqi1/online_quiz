@@ -21,14 +21,14 @@
         <div class="col-md-8">
             <h2 th:text="${quiz.title}"></h2>
             <p class="text-muted" th:text="'Category: ' + ${quiz.category}"></p>
-            <p class="text-muted" th:text="'Created by: ' + ${quiz.createdBy}"></p>
+            <p class="text-muted" th:text="'Created by: ' + ${quiz.createdByUsername}"></p>
             <p class="text-muted" th:text="'Views: ' + ${quiz.description}"></p>
 
             <p th:text="${quiz.description}"></p>
 
             <!-- Start Quiz Button -->
             <a th:href="@{'/quiz/start/' + ${quiz.id}}" class="btn btn-primary">Start Quiz</a>
-            <a th:href="@{'/question/details/' + ${quiz.id}}" class="btn btn-primary">view Quiz</a>
+            <a th:href="@{'/quiz/details/' + ${quiz.id}}" class="btn btn-primary">Quiz Details</a>
 
         </div>
     </div>

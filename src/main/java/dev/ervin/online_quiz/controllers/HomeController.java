@@ -1,5 +1,6 @@
 package dev.ervin.online_quiz.controllers;
 
+import dev.ervin.online_quiz.dtos.QuizDto;
 import dev.ervin.online_quiz.helpers.ListPartitioner;
 import dev.ervin.online_quiz.models.Quiz;
 import dev.ervin.online_quiz.services.QuizService;
@@ -23,11 +24,11 @@ public class HomeController {
 
     @GetMapping("/")
     public String home(Model model) {
-        List<Quiz> quizzes = quizService.getRecentQuizzes();
+        List<QuizDto> quizzes = quizService.getRecentQuizzes();
         if (quizzes == null) {
             quizzes = new ArrayList<>();
         }
-        List<List<Quiz>> quizPartitions = ListPartitioner.partition(quizzes, 3);
+        List<List<QuizDto>> quizPartitions = ListPartitioner.partition(quizzes, 3);
         model.addAttribute("quizPartitions", quizPartitions);
 
         return "index";

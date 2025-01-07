@@ -6,10 +6,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.security.Timestamp;
+
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+
 
 @Getter
 @Setter
@@ -53,5 +52,5 @@ public class Question {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
-    // Getters and setters...
+
 }
