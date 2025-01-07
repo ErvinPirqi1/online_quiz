@@ -1,14 +1,14 @@
 package dev.ervin.online_quiz.services;
 
-import dev.ervin.online_quiz.models.Question;
+import dev.ervin.online_quiz.dtos.QuestionDto;
+import dev.ervin.online_quiz.models.Answer;
 
 import java.util.List;
 
+public interface QuestionService extends BaseService<QuestionDto, Long> {
+    List<QuestionDto> getAllQuestionsByQuiz(Long quizId);
 
-public interface QuestionService extends BaseService<Question, Long> {
-    List<Question> getAllQuestionsByQuiz(Long quizId);
+    void createQuestion(Long quizId, QuestionDto questionDto);
 
-    void createQuestion(Long quizId, Question question);
-
+    List<Answer> getAnswersByQuestionId(Long questionId);
 }
-

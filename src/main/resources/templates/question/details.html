@@ -73,19 +73,23 @@
         <!-- Loop through each question -->
         <div th:each="question : ${question}" class="card mb-4 shadow">
             <div class="card-body">
+                <!-- Display the question text -->
                 <p class="card-text font-weight-bold" th:text="${question.question}">Question Text</p>
+
+                <!-- Display question type -->
                 <p th:if="${question.questionType} == 1">Type: Multiple Choice</p>
                 <p th:if="${question.questionType} == 0">Type: True/False</p>
 
+                <!-- Iterate over the answers specific to this question -->
                 <ul class="list-group list-group-flush mb-3">
-                    <li th:each="answer : ${answersMap[question.id]}"
-                        class="list-group-item d-flex justify-content-between align-items-center">
+                    <li th:each="answer : ${answer[question.id]}" class="list-group-item d-flex justify-content-between align-items-center">
                         <span th:text="${answer.optionText}" class="text-success">Answer Text</span>
                         <i th:text="${answer.isCorrect} ? '✅' : '❌'" class="text-success"></i>
                     </li>
                 </ul>
             </div>
         </div>
+
     </div>
 
     <!-- Add Question Button -->

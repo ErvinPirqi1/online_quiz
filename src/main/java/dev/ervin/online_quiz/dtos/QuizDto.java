@@ -1,9 +1,7 @@
 package dev.ervin.online_quiz.dtos;
 
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.PositiveOrZero;
+import dev.ervin.online_quiz.models.User;
 import jakarta.validation.constraints.Size;
-import lombok.*;
 
 
 import java.time.LocalDateTime;
@@ -15,11 +13,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Pattern;
-import java.sql.Timestamp;
 
 @Data
 @NoArgsConstructor
@@ -58,9 +53,9 @@ public class QuizDto {
     private LocalDateTime modifiedAt;
 
     @NotNull(message = "Created By ID cannot be null")
-    private Long createdById;
+    private String createdByUsername;
 
-    private Long modifiedById;
+    private String modifiedByUsername;
 
     @NotNull(message = "Deleted status cannot be null")
     private Boolean isDeleted;
