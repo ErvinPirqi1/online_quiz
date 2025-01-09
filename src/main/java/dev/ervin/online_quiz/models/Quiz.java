@@ -51,7 +51,7 @@ public class Quiz {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
-    // Lifecycle hooks to automatically set timestamps
+
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();

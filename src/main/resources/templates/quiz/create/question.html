@@ -1,20 +1,55 @@
 <!DOCTYPE html>
-<html lang="en">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <title>Add Questions</title>
 </head>
 <body>
 
-<form action="#" th:action="@{/quiz/{quizId}/question/create(quizId=${quizId})}" th:object="${question}" method="post">
-    <label for="questionText">Question Text:</label>
-    <input type="text" th:field="*{questionText}" placeholder="Enter question" required/>
+<h2>Add Questions to Quiz</h2>
 
-    <label for="questionType">Question Type (e.g., Multiple Choice):</label>
-    <input type="text" th:field="*{questionType}" placeholder="Enter question type" required/>
+<form th:action="@{/quiz/create/question/{quizId}(quizId=${quizId})}" method="post">
+    <label>Question:</label>
+    <input type="text" name="questionText" required/><br>
 
+    <label>Type:</label>
+    <select name="questionType">
+        <option value="0">Multiple Choice</option>
+        <option value="1">True/False</option>
+    </select><br>
+
+    <div id="optionsContainer">
+        <div>
+            <label>Option 1:</label>
+            <input type="text" name="options[0].text" required/>
+            <input type="radio" name="correctAnswer" value="0"/> Correct?
+        </div>
+        <div>
+            <label>Option 2:</label>
+            <input type="text" name="options[1].text" required/>
+            <input type="radio" name="correctAnswer" value="1"/> Correct?
+        </div>
+    </div>
+
+    <button type="button" onclick="addOption()">Add Another Option</button>
     <button type="submit">Add Question</button>
 </form>
+
+<form th:action="@{/quiz/finish/{quizId}(quizId=${quizId})}" method="post">
+    <button type="submit">Finish Quiz</button>
+</form>
+
+<script>
+    function addOption() {
+        let container = document.getElementById("optionsContainer");
+        let count = container.children.length;
+
+        let div = document.createElement("div");
+        div.innerHTML = `<label>Option ${count + 1}:</label>
+                         <input type="text" name="options[${count}].text" required/>
+                         <input type="radio" name="correctAnswer" value="${count}"/> Correct?`;
+        container.appendChild(div);
+    }
+</script>
 
 </body>
 </html>
