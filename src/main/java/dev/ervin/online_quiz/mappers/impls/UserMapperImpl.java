@@ -4,29 +4,38 @@ import dev.ervin.online_quiz.dtos.UserDto;
 import dev.ervin.online_quiz.dtos.UserRegistrationRequestDto;
 import dev.ervin.online_quiz.mappers.UserMapper;
 import dev.ervin.online_quiz.models.User;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Component;
 
+@Component
 public class UserMapperImpl implements UserMapper {
+    private final PasswordEncoder passwordEncoder;
+
+    public UserMapperImpl(PasswordEncoder passwordEncoder) {
+        this.passwordEncoder = passwordEncoder;
+    }
+
     @Override
-    public User fromUserRegistrationDto(UserRegistrationRequestDto userRegistrationRequestDto) {
+    public User fromUserRegistrationDto(UserRegistrationRequestDto userRegDto) {
         User user = new User();
-        user.setUsername(userRegistrationRequestDto.getUsername());
-        user.setName(userRegistrationRequestDto.getName());
-        user.setSurname(userRegistrationRequestDto.getSurname());
-        user.setEmail(userRegistrationRequestDto.getEmail());
-        user.setPassword(userRegistrationRequestDto.getPassword());
-        user.setRole(userRegistrationRequestDto.getRole());
+        user.setUsername(userRegDto.getUsername());
+        user.setPassword(passwordEncoder.encode(userRegDto.getPassword()));  // Encrypt the password here
+        user.setEmail(userRegDto.getEmail());
+        user.setName(userRegDto.getName());
+        user.setSurname(userRegDto.getSurname());
+        user.setRole(userRegDto.getRole());
         return user;
     }
 
     @Override
     public User toEntity(UserDto userDto) {
-        User user = new User();
+        User user =  new User();
         user.setId(userDto.getId());
         user.setUsername(userDto.getUsername());
         user.setName(userDto.getName());
         user.setSurname(userDto.getSurname());
-        user.setEmail(userDto.getEmail());
         user.setRole(userDto.getRole());
+        user.setEmail(userDto.getEmail());
         return user;
     }
 
@@ -37,8 +46,9 @@ public class UserMapperImpl implements UserMapper {
         userDto.setUsername(user.getUsername());
         userDto.setName(user.getName());
         userDto.setSurname(user.getSurname());
-        userDto.setEmail(user.getEmail());
         userDto.setRole(user.getRole());
+        userDto.setEmail(user.getEmail());
         return userDto;
     }
+
 }

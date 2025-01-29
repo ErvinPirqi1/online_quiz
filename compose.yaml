@@ -2,8 +2,13 @@ services:
   postgres:
     image: 'postgres:latest'
     environment:
-      - 'POSTGRES_DB=quiz_db'
-      - 'POSTGRES_PASSWORD=admin'
-      - 'POSTGRES_USER=admin'
+      - 'POSTGRES_DB=quiz_db'       # Database name
+      - 'POSTGRES_PASSWORD=admin'    # Password for the user
+      - 'POSTGRES_USER=admin'        # User for the database
     ports:
-      - '5432:5432'
+      - '5432:5432'                  # Expose PostgreSQL on port 5432
+    volumes:
+      - quiz_db_data:/var/lib/postgresql/data  # Persist data across container restarts
+
+volumes:
+  quiz_db_data:

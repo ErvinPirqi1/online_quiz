@@ -1,13 +1,12 @@
 package dev.ervin.online_quiz.models;
 
-
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.security.Timestamp;
+
 import java.time.LocalDateTime;
 
 @Getter
@@ -17,11 +16,12 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "users")
 public class User {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false , unique = true)
+    @Column(nullable = false, unique = true)
     private String username;
 
     @Column(nullable = false)
@@ -36,8 +36,9 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Short role; // 0=admin, 1=teacher, 2=student
+    private Role role;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -55,6 +56,7 @@ public class User {
 
     @Column(nullable = false)
     private Boolean isDeleted = false;
+
 
 
 }
