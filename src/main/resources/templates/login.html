@@ -1,54 +1,40 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Login</title>
-    <!-- Link to Bootstrap CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
-<div class="container">
-    <div class="row justify-content-center mt-5">
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header text-center">
-                    <h4>Login</h4>
-                </div>
-                <div class="card-body">
-                    <!-- Login Form -->
-                    <form action="#" th:action="@{/login}" method="post">
-                        <!-- Username input -->
-                        <div class="form-group">
-                            <label for="username">Username</label>
-                            <input type="text" id="username" name="username" class="form-control" required placeholder="Enter Username" />
-                        </div>
+<div class="container mt-5">
+    <h2>Login</h2>
+    <form th:action="@{/login}" method="post">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
 
-                        <!-- Password input -->
-                        <div class="form-group">
-                            <label for="password">Password</label>
-                            <input type="password" id="password" name="password" class="form-control" required placeholder="Enter Password" />
-                        </div>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
 
-                        <!-- Error message (if any) -->
-                        <div th:if="${param.error}" class="alert alert-danger" role="alert">
-                            Invalid username or password.
-                        </div>
+        <button type="submit">Login</button>
+        <button type="button" th:href="@{/register}">Join</button>
 
-                        <div class="form-group text-center">
-                            <button type="submit" class="btn btn-primary">Login</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
+        <li class="button-header margin-left">
+            <a href="#" class="btn" th:href="@{/register}">Join</a>
+        </li>
+
+
+        <!-- Display error messages -->
+        <div th:if="${param.error}">
+            <p class="text-danger" th:if="${param.error == 'wrong_password'}">Incorrect password. Please try again.</p>
+            <p class="text-danger" th:if="${param.error == 'user_not_found'}">Username not found. Please check your input.</p>
+            <p class="text-danger" th:if="${param.error == 'unknown_error'}">An unknown error occurred. Please contact support.</p>
         </div>
-    </div>
+    </form>
+
+
 </div>
 
-<!-- Bootstrap JS (Optional) -->
-<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.2/dist/umd/popper.min.js"></script>
-<script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
 </body>
 </html>

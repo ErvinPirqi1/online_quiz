@@ -19,7 +19,8 @@ public class UserMapperImpl implements UserMapper {
     public User fromUserRegistrationDto(UserRegistrationRequestDto userRegDto) {
         User user = new User();
         user.setUsername(userRegDto.getUsername());
-        user.setPassword(passwordEncoder.encode(userRegDto.getPassword()));  // Encrypt the password here
+
+        user.setPassword(userRegDto.getPassword());  // Encrypt the password here
         user.setEmail(userRegDto.getEmail());
         user.setName(userRegDto.getName());
         user.setSurname(userRegDto.getSurname());

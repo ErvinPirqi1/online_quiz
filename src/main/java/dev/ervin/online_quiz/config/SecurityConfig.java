@@ -1,11 +1,13 @@
 package dev.ervin.online_quiz.config;
 
+import dev.ervin.online_quiz.config.CustomAuthenticationFailureHandler;
 import dev.ervin.online_quiz.services.impls.UserServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -16,54 +18,68 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 @EnableWebSecurity
 public class SecurityConfig {
 
-    private final UserServiceImpl userService;
+    private final UserServiceImpl userServiceImpl;
+    private final CustomAuthenticationFailureHandler failureHandler;
 
-    public SecurityConfig(@Lazy UserServiceImpl userService) {
-        this.userService = userService;
+    public SecurityConfig(@Lazy UserServiceImpl userServiceImpl, CustomAuthenticationFailureHandler failureHandler) {
+        this.userServiceImpl = userServiceImpl;
+        this.failureHandler = failureHandler;
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        String[] publicUrls = {"/", "/login", "/register", "/quiz/list"};  // Add /quiz/list to the public URLs
+        String[] staticResources = {"/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/fonts/**"};
+
         http
-                .csrf(csrf -> csrf.disable())  // Disable CSRF protection
+                .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers("/static/**", "/assets/**","/css/**", "/js/**", "/images/**", "/fonts/**").permitAll()// Allow access to static resources
-                        .requestMatchers("/","/index", "/login", "/register").permitAll() // Public URLs
-                        .requestMatchers("/teacher/**").hasRole("TEACHER") // Restricted to TEACHERS
-                        .requestMatchers("/student/**").hasRole("STUDENT") // Restricted to STUDENTS
-                        .anyRequest().authenticated() // All other requests require authentication
+                        .requestMatchers(staticResources).permitAll()  // Allow access to static resources
+                        .requestMatchers(publicUrls).permitAll()  // Allow access to the public URLs
+                        .requestMatchers("/teacher/**").hasRole("TEACHER")  // Require role TEACHER for /teacher/** URLs
+                        .requestMatchers("/student/**").hasRole("STUDENT")  // Require role STUDENT for /student/** URLs
+                        .anyRequest().authenticated()  // Any other request requires authentication
                 )
                 .formLogin(form -> form
-                        .loginPage("/login") // Custom login page
-                        .defaultSuccessUrl("/", true) // Redirect after successful login
+                        .loginPage("/login")
+                        .loginProcessingUrl("/login")  // Ensure this matches your form action
+                        .failureHandler(failureHandler)
+                        .defaultSuccessUrl("/", true)
                         .permitAll()
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
-                        .logoutSuccessUrl("/login?logout")
-                        .invalidateHttpSession(true) // Invalidate session on logout
+                        .logoutSuccessUrl("/")
+                        .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
                         .permitAll()
                 )
                 .sessionManagement(session -> session
-                        .maximumSessions(1) // Limit to one session per user
-                        .expiredUrl("/login?expired") // Redirect on session expiration
+                        .maximumSessions(1)
+                        .expiredUrl("/login?expired")
                 );
 
         return http.build();
     }
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Hash passwords for security
-    }
+
+
+
 
     @Bean
-    public AuthenticationManager authenticationManager(HttpSecurity http) throws Exception {
-        AuthenticationManagerBuilder authenticationManagerBuilder =
-                http.getSharedObject(AuthenticationManagerBuilder.class);
-        authenticationManagerBuilder.userDetailsService(userService)
-                .passwordEncoder(passwordEncoder());
-        return authenticationManagerBuilder.build();
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+
+    public void testPasswordVerification(String rawPassword, String storedPassword) {
+        boolean matches = passwordEncoder().matches(rawPassword, storedPassword);
+        System.out.println("Password matches: " + matches);
+    }
+
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
+        return authConfig.getAuthenticationManager();
     }
 }

@@ -53,7 +53,7 @@
             <!-- Logo -->
             <div class="col-xl-2 col-lg-2">
               <div class="logo">
-                <a href="index.html"><img src="/assets/img/logo/logo.png" alt="Logo"></a>
+                <a th:href="@{/}"><img src="/assets/img/logo/logo.png" alt="Logo"></a>
               </div>
             </div>
 
@@ -63,22 +63,38 @@
                 <div class="main-menu d-none d-lg-block">
                   <nav>
                     <ul id="navigation">
+                      <!-- Show user information if logged in -->
+                      <li th:if="${#authorization.expression('isAuthenticated()') and #authentication.principal instanceof T(org.springframework.security.core.userdetails.UserDetails)}">
+                        <span>Welcome, <span th:text="${#authentication.principal.username}">Username</span></span>
+                        <span>Role: <span th:text="${#authentication.principal.authorities[0].authority}">Role</span></span>
+                      </li>
+
+                      <!-- Fallback for guests -->
+                      <li th:if="${#authorization.expression('!isAuthenticated()') or #authentication.principal == 'anonymousUser'}">
+                        <span>Welcome, Guest</span>
+                      </li>
+
+                      <!-- Menu items always visible -->
                       <li class="active"><a th:href="@{/}">Home</a></li>
                       <li><a th:href="@{/quiz}">Quizzes</a></li>
                       <li><a href="/">About</a></li>
                       <li><a href="#">Blog</a></li>
                       <li><a href="contact.html">Contact</a></li>
 
-                      <!-- Registration Button -->
-                      <li class="button-header margin-left">
+                      <!-- Show registration and login buttons only if the user is not logged in -->
+                      <li class="button-header margin-left" th:if="${#authorization.expression('!isAuthenticated()')}">
                         <a href="#" class="btn" th:href="@{/register}">Join</a>
                       </li>
-
-                      <!-- Login Button -->
-                      <li class="button-header">
+                      <li class="button-header" th:if="${#authorization.expression('!isAuthenticated()')}">
                         <a href="#" class="btn btn3" th:href="@{/login}">Log in</a>
                       </li>
+
+                      <!-- Show logout button only if the user is logged in -->
+                      <li class="button-header" th:if="${#authorization.expression('isAuthenticated()')}">
+                        <a href="#" class="btn btn3" th:href="@{/logout}">Log out</a>
+                      </li>
                     </ul>
+
                   </nav>
                 </div>
               </div>
@@ -89,6 +105,10 @@
     </div>
   </div>
 </header>
+
+
+
+
 
 <!-- Slider Area -->
 <section class="slider-area">
@@ -113,7 +133,8 @@
 <main id="main" class="main">
   <section class="section dashboard">
     <div class="row">
-      <th:block th:replace="${content}"></th:block> <!-- Page-specific content -->
+      <!-- Display the dynamic content -->
+      <th:block th:replace="${content}"></th:block>
     </div>
   </section>
 </main>
@@ -209,6 +230,7 @@
   </div>
 </footer>
 
+
 <!-- Back to Top Button -->
 <div id="back-top">
   <a title="Go to Top" href="#"> <i class="fas fa-level-up-alt"></i></a>
@@ -238,6 +260,13 @@
 <script src="/assets/js/jquery.validate.min.js"></script>
 <script src="/assets/js/mail-script.js"></script>
 <script src="/assets/js/active.js"></script>
+<script src="/assets/js/jquery.ajaxchimp.min.js"></script>
+<script src="/assets/js/plugins.js"></script>
+<script src="/assets/js/main.js"></script>
+
+
+
+
 
 <th:block th:if="${scripts != null && scripts != ''}">
   <th:block th:insert="${scripts}"></th:block> <!-- Optional additional scripts -->
@@ -246,3 +275,5 @@
 </body>
 
 </html>
+
+
