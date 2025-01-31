@@ -25,12 +25,15 @@ public class HomeController {
     @GetMapping("/")
     public String home(Model model) {
         List<QuizDto> quizzes = quizService.getRecentQuizzes();
-        if (quizzes == null) {
-            quizzes = new ArrayList<>();
+
+        if (quizzes == null || quizzes.isEmpty()) {
+            model.addAttribute("quizPartitions", new ArrayList<>()); // Ensure it's never null
+        } else {
+            List<List<QuizDto>> quizPartitions = ListPartitioner.partition(quizzes, 3);
+            model.addAttribute("quizPartitions", quizPartitions);
         }
-        List<List<QuizDto>> quizPartitions = ListPartitioner.partition(quizzes, 3);
-        model.addAttribute("quizPartitions", quizPartitions);
 
         return "index";
     }
+
 }

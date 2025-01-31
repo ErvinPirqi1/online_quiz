@@ -3,6 +3,7 @@ package dev.ervin.online_quiz.models;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -26,13 +27,18 @@ public class Quiz {
     private String description;
 
     @Column(nullable = false)
-    private String img;
-
-    @Column(nullable = false)
     private String category;
 
     @Column(nullable = false)
     private Short visibility; // 0=private, 1=public
+
+    @ManyToMany
+    @JoinTable(
+            name = "quiz_participation",
+            joinColumns = @JoinColumn(name = "quiz_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> participants; // List of students who participated in the quiz
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -51,7 +57,6 @@ public class Quiz {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
-    // Lifecycle hooks to automatically set timestamps
     @PrePersist
     public void prePersist() {
         LocalDateTime now = LocalDateTime.now();

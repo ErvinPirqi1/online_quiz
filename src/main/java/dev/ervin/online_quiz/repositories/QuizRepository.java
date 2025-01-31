@@ -20,4 +20,7 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     List<Quiz> findTop9ByOrderByCreatedAtDesc();
 //select * from quiz order by created_at desc limit 9
 
+    List<Quiz> findByParticipantsUsername(String username);
+
+    List<Quiz> findByCreatedByUsername(String createdByUsername);
 }

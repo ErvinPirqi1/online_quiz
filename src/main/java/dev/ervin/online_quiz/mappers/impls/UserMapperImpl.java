@@ -9,17 +9,11 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class UserMapperImpl implements UserMapper {
-    private final PasswordEncoder passwordEncoder;
-
-    public UserMapperImpl(PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
-    }
 
     @Override
     public User fromUserRegistrationDto(UserRegistrationRequestDto userRegDto) {
         User user = new User();
         user.setUsername(userRegDto.getUsername());
-
         user.setPassword(userRegDto.getPassword());  // Encrypt the password here
         user.setEmail(userRegDto.getEmail());
         user.setName(userRegDto.getName());

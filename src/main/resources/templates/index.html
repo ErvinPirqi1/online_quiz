@@ -11,16 +11,18 @@
     <h1>Welcome to the Quiz Platform</h1>
     <h2>Recent Quizzes</h2>
 
-
-    <div th:unless="${quizPartitions != null && quizPartitions.size() > 0}">
+    <div th:if="${quizPartitions == null or quizPartitions.isEmpty()}">
         <p>There are no quizzes as of now.</p>
     </div>
 
-    <div th:if="${quizPartitions != null && quizPartitions.size() > 0}">
-        <div th:insert="~{shared/_moving_cards::moving_cards(quizPartitions=${quizPartitions})}">
+    <div th:if="${quizPartitions != null and not #lists.isEmpty(quizPartitions)}">
+        <div th:each="partition : ${quizPartitions}">
+            <div th:insert="~{shared/_moving_cards::moving_cards(quizPartitions=${partition})}">
+            </div>
         </div>
     </div>
 </div>
+
 
 <script id="scr"></script>
 </html>

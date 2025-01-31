@@ -28,7 +28,7 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        String[] publicUrls = {"/", "/login", "/register", "/quiz/list"};  // Add /quiz/list to the public URLs
+        String[] publicUrls = {"/", "/login", "/register", "/quiz"};  // Add /quiz/list to the public URLs
         String[] staticResources = {"/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/fonts/**"};
 
         http

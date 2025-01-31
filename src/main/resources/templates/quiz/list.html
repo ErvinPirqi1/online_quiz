@@ -3,17 +3,17 @@
 
 <style>
     .custom-card {
-        max-width: 100%; /* Let Bootstrap grid control card width */
-        min-height: 450px; /* Set a fixed minimum height for uniformity */
+        max-width: 100%;
+        min-height: 450px;
         display: flex;
         flex-direction: column;
-        justify-content: space-between; /* Footer stays at the bottom */
+        justify-content: space-between;
     }
 
     .card-img-top {
         height: 200px;
-        object-fit: cover; /* Maintain aspect ratio of the image */
-        border-bottom: 2px solid #007bff; /* Highlight image with a border */
+        object-fit: cover;
+        border-bottom: 2px solid #007bff;
     }
 
     .card-body {
@@ -30,14 +30,13 @@
         font-weight: bold;
         color: #007bff;
         margin-bottom: 20px;
-        text-align: center; /* Center the heading */
+        text-align: center;
     }
 
     .row {
-        justify-content: center; /* Center all rows */
+        justify-content: center;
     }
 
-    /* Add spacing between rows */
     .custom-row {
         margin-bottom: 30px;
     }
@@ -57,10 +56,9 @@
         background-color: #0056b3;
     }
 
-    /* Extra responsiveness for smaller screens */
     @media (max-width: 768px) {
         .custom-row {
-            flex-direction: column; /* Stack cards vertically */
+            flex-direction: column;
             gap: 20px;
         }
     }
@@ -69,36 +67,86 @@
 <body>
 <div id="quiz-list">
     <div class="container mt-5">
-        <!-- Add New Quiz Button -->
-        <div class="text-center mb-4">
-            <a th:href="@{/quiz/create}" class="add-quiz-btn">+ Add New Quiz</a>
+        <!-- Add New Quiz Button (Visible only for Teachers) -->
+        <div th:if="${#authorization.expression('isAuthenticated()') and #authentication.principal.authorities[0].authority == 'ROLE_TEACHER'}" class="text-center mb-4">
+            <a th:href="@{/quiz/createQuiz}" class="btn hero-btn" data-animation="fadeInLeft" data-delay="0.7s">+ Add New Quiz</a>
         </div>
 
-         Recent Quizzes Section
+        <!-- Quizzes Section -->
         <div class="container">
-            <h2>Recent Quizzes</h2>
+            <h2 th:if="${#authorization.expression('!isAuthenticated()') or #authentication.principal == 'anonymousUser'}">Recent Quizzes</h2>
+            <h2 th:if="${#authorization.expression('isAuthenticated()') and #authentication.principal.authorities[0].authority == 'ROLE_TEACHER'}">Your Quizzes</h2>
+            <h2 th:if="${#authorization.expression('isAuthenticated()') and #authentication.principal.authorities[0].authority == 'ROLE_STUDENT'}">Participated Quizzes</h2>
 
-            <div th:unless="${quiz != null && quiz.size() > 0}" class="text-center">
-                <p>No quizzes available at the moment. Create a new one!</p>
+            <div th:if="${#authorization.expression('!isAuthenticated()') or #authentication.principal == 'anonymousUser'}">
+                <!-- Display recent quizzes for guests -->
+                <div th:unless="${quiz != null and quiz.size() > 0}" class="text-center">
+                    <p>No quizzes available at the moment. Check back later!</p>
+                </div>
+                <div th:if="${quiz != null and quiz.size() > 0}">
+                    <div class="row custom-row">
+                        <div th:each="quiz : ${quiz}" class="col-md-6 mb-4">
+                            <div class="card custom-card shadow p-2 bg-white rounded">
+<!--                                <img th:src="${quiz.img}" class="card-img-top" alt="Quiz Image" />-->
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary" th:text="${quiz.title}">Quiz Title</h5>
+                                    <p class="card-text" th:text="${quiz.description}">Quiz Description</p>
+                                    <p class="card-text"><strong>Author:</strong> <span th:text="${quiz.createdByUsername}">Author Name</span></p>
+                                    <p class="card-text"><strong>Category:</strong> <span th:text="${quiz.category}">Quiz Category</span></p>
+                                </div>
+                                <div class="card-footer text-center">
+                                    <a th:href="@{/quiz/view/{id}(id=${quiz.id})}" class="btn btn-primary">Open Quiz</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
-            <div th:if="${quiz != null && quiz.size() > 0}">
-                <div class="row custom-row">
-                    <!-- Loop through each quiz -->
-                    <div th:each="quiz : ${quiz}" class="col-md-6 mb-4">
-                        <div class="card custom-card shadow p-2 bg-white rounded">
-                            <!-- Quiz Image -->
-                            <img th:src="${quiz.img}" class="card-img-top" alt="Quiz Image" />
-                            <!-- Card Body -->
-                            <div class="card-body">
-                                <h5 class="card-title text-primary" th:text="${quiz.title}">Quiz Title</h5>
-                                <p class="card-text" th:text="${quiz.description}">Quiz Description</p>
-                                <p class="card-text"><strong>Author:</strong> <span th:text="${quiz.createdByUsername}">Author Name</span></p>
-                                <p class="card-text"><strong>Category:</strong> <span th:text="${quiz.category}">Quiz Category</span></p>
+            <div th:if="${#authorization.expression('isAuthenticated()') and #authentication.principal.authorities[0].authority == 'ROLE_TEACHER'}">
+                <!-- Display quizzes created by and participated in by teachers -->
+                <div th:unless="${quiz != null and quiz.size() > 0}" class="text-center">
+                    <p>You haven't created or participated in any quizzes yet. Start by adding or joining a new quiz!</p>
+                </div>
+                <div th:if="${quiz != null and quiz.size() > 0}">
+                    <div class="row custom-row">
+                        <div th:each="quiz : ${quiz}" class="col-md-6 mb-4">
+                            <div class="card custom-card shadow p-2 bg-white rounded">
+<!--                                <img th:src="${quiz.img}" class="card-img-top" alt="Quiz Image" />-->
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary" th:text="${quiz.title}">Quiz Title</h5>
+                                    <p class="card-text" th:text="${quiz.description}">Quiz Description</p>
+                                    <p class="card-text"><strong>Author:</strong> <span th:text="${quiz.createdByUsername}">Author Name</span></p>
+                                    <p class="card-text"><strong>Category:</strong> <span th:text="${quiz.category}">Quiz Category</span></p>
+                                </div>
+                                <div class="card-footer text-center">
+                                    <a th:href="@{/quiz/view/{id}(id=${quiz.id})}" class="btn btn-primary">Open Quiz</a>
+                                </div>
                             </div>
-                            <!-- Card Footer -->
-                            <div class="card-footer text-center">
-                                <a th:href="@{/quiz/view/{id}(id=${quiz.id})}" class="btn btn-primary">Open Quiz</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div th:if="${#authorization.expression('isAuthenticated()') and #authentication.principal.authorities[0].authority == 'ROLE_STUDENT'}">
+                <!-- Display quizzes participated in by students -->
+                <div th:unless="${quiz != null and quiz.size() > 0}" class="text-center">
+                    <p>You haven't participated in any quizzes yet. Join a quiz to start!</p>
+                </div>
+                <div th:if="${quiz != null and quiz.size() > 0}">
+                    <div class="row custom-row">
+                        <div th:each="quiz : ${quiz}" class="col-md-6 mb-4">
+                            <div class="card custom-card shadow p-2 bg-white rounded">
+<!--                                <img th:src="${quiz.img}" class="card-img-top" alt="Quiz Image" />-->
+                                <div class="card-body">
+                                    <h5 class="card-title text-primary" th:text="${quiz.title}">Quiz Title</h5>
+                                    <p class="card-text" th:text="${quiz.description}">Quiz Description</p>
+                                    <p class="card-text"><strong>Author:</strong> <span th:text="${quiz.createdByUsername}">Author Name</span></p>
+                                    <p class="card-text"><strong>Category:</strong> <span th:text="${quiz.category}">Quiz Category</span></p>
+                                </div>
+                                <div class="card-footer text-center">
+                                    <a th:href="@{/quiz/view/{id}(id=${quiz.id})}" class="btn btn-primary">Open Quiz</a>
+                                </div>
                             </div>
                         </div>
                     </div>

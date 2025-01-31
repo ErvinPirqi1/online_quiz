@@ -34,78 +34,64 @@ public class QuestionServiceImpl implements QuestionService {
     }
 
     @Override
-    public QuestionDto create(QuestionDto questionDto) {
-        Question question = questionMapper.toEntity(questionDto);
-        question.setCreatedAt(LocalDateTime.now());
-        question = questionRepository.save(question);
-        return questionMapper.toDto(question);
-    }
-
-    @Override
-    public QuestionDto update(Long id, QuestionDto questionDetails) {
-        Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Question not found with ID: " + id));
-
-        question.setQuestion(questionDetails.getQuestion());
-        question.setQuestionType(questionDetails.getQuestionType());
-        question.setModifiedAt(LocalDateTime.now());
-
-        question = questionRepository.save(question);
-        return questionMapper.toDto(question);
-    }
-
-    @Override
-    public QuestionDto getById(Long id) {
-        Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Question not found with ID: " + id));
-        return questionMapper.toDto(question);
-    }
-
-    @Override
-    public List<QuestionDto> getAll() {
-        return questionRepository.findAll().stream()
-                .map(questionMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public void delete(Long id) {
-        Question question = questionRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Question not found with ID: " + id));
-        question.setIsDeleted(true);
-        question.setModifiedAt(LocalDateTime.now());
-        questionRepository.save(question);
-    }
-
-    @Override
     public List<QuestionDto> getAllQuestionsByQuiz(Long quizId) {
-        return questionRepository.findAllByQuizId(quizId).stream()
-                .map(questionMapper::toDto)
-                .collect(Collectors.toList());
+        return List.of();
     }
 
     @Override
     public void createQuestion(Long quizId, QuestionDto questionDto) {
-
-        Question question = questionMapper.toEntity(questionDto);
-
-
         Quiz quiz = quizRepository.findById(quizId)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz not found with ID: " + quizId));
 
-
+        Question question = questionMapper.toEntity(questionDto);
         question.setQuiz(quiz);
-
         question.setCreatedAt(LocalDateTime.now());
         question.setIsDeleted(false);
 
-
         questionRepository.save(question);
-    }
 
+        // Save the answers for the question
+        if (questionDto.getOptions() != null) {
+            for (int i = 0; i < questionDto.getOptions().size(); i++) {
+                Answer answer = new Answer();
+                answer.setOptionText(questionDto.getOptions().get(i).getText());
+                answer.setIsCorrect(questionDto.getCorrectAnswer() != null && questionDto.getCorrectAnswer().equals(i));
+                answer.setQuestion(question);
+                answer.setCreatedAt(LocalDateTime.now());
+                answer.setIsDeleted(false);
+
+                answerRepository.save(answer);
+            }
+        }
+    }
 
     @Override
     public List<Answer> getAnswersByQuestionId(Long questionId) {
-        return answerRepository.findAllByQuestionId(questionId);
+        return List.of();
+    }
+
+    @Override
+    public QuestionDto create(QuestionDto entity) {
+        return null;
+    }
+
+    @Override
+    public QuestionDto update(Long aLong, QuestionDto entityDetails) {
+        return null;
+    }
+
+    @Override
+    public QuestionDto getById(Long aLong) {
+        return null;
+    }
+
+    @Override
+    public List<QuestionDto> getAll() {
+        return List.of();
+    }
+
+    @Override
+    public void delete(Long aLong) {
+
     }
 }

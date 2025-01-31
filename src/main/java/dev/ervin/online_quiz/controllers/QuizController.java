@@ -4,14 +4,19 @@ import dev.ervin.online_quiz.dtos.QuestionDto;
 import dev.ervin.online_quiz.dtos.QuizDto;
 import dev.ervin.online_quiz.dtos.UserDto;
 import dev.ervin.online_quiz.helpers.FileHelper;
-import dev.ervin.online_quiz.mappers.QuizMapper;
 import dev.ervin.online_quiz.models.Answer;
 import dev.ervin.online_quiz.models.Quiz;
+import dev.ervin.online_quiz.models.User;
 import dev.ervin.online_quiz.services.QuestionService;
 import dev.ervin.online_quiz.services.QuizService;
-import dev.ervin.online_quiz.services.temporary.MockUserService;
+import dev.ervin.online_quiz.services.UserService;
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
@@ -20,6 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,25 +36,25 @@ public class QuizController {
 
     private final QuizService quizService;
     private final FileHelper fileHelper;
-    private final MockUserService mockUserService;
-    private final QuestionService questionService;
 
-    public QuizController(QuizService quizService, FileHelper fileHelper, QuizMapper quizMapper, MockUserService mockUserService, QuestionService questionService) {
+    private final QuestionService questionService;
+    private final UserService userService;
+
+    public QuizController(QuizService quizService, FileHelper fileHelper, QuestionService questionService, UserService userService) {
         this.quizService = quizService;
         this.fileHelper = fileHelper;
-        this.mockUserService = mockUserService;
         this.questionService = questionService;
+        this.userService = userService;
     }
 
     @GetMapping("")
     public String quiz(Model model) {
-        List<QuizDto> quizList = quizService.getAll();
-        model.addAttribute("quiz", quizList);
-        // Mock user temporary delete after user fully implemented by A.L
-        model.addAttribute("user", mockUserService.getCurrentUser());
-
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) auth.getPrincipal();
+        UserDto userDto = userService.getUserDetails(userDetails.getUsername());
+        model.addAttribute("quiz", quizService.getAll());
+        model.addAttribute("user", userDto);
         return "quiz/list";
-
     }
 
     @GetMapping("/view/{id}")
@@ -60,95 +66,120 @@ public class QuizController {
 
     @GetMapping("/details/{id}")
     public String getDetails(@PathVariable Long id, Model model) {
-        // Fetch quiz and convert to DTO
         QuizDto quiz = quizService.getById(id);
         model.addAttribute("quiz", quiz);
 
-        // Fetch questions and map to DTOs
         List<QuestionDto> questions = questionService.getAllQuestionsByQuiz(id);
-        model.addAttribute("question", questions);
+        model.addAttribute("questions", questions);
 
-        // Fetch answers for all questions and organize them into a map
         Map<Long, List<Answer>> questionAnswersMap = questions.stream()
                 .collect(Collectors.toMap(
                         QuestionDto::getId,
                         question -> questionService.getAnswersByQuestionId(question.getId())
                 ));
-        System.out.println(questionAnswersMap);
-        model.addAttribute("answer", questionAnswersMap);
+        model.addAttribute("answers", questionAnswersMap);
 
         return "quiz/details";
     }
 
-
-    @GetMapping("/create")
-    public String createQuizForm(Model model) {
-        model.addAttribute("quiz", new QuizDto());
-        return "quiz/create";
+    @GetMapping("/createQuiz")
+    public String showCreateQuizForm(Model model, @AuthenticationPrincipal UserDetails userDetails) {
+        model.addAttribute("quiz", new Quiz());
+        if (userDetails != null) {
+            model.addAttribute("user", userDetails);
+        }
+        return "quiz/createQuiz";  // Ensure this matches the Thymeleaf template path
     }
 
-    @PostMapping
-    public String createQuiz(@Valid @ModelAttribute QuizDto quizDto, BindingResult result, RedirectAttributes redirectAttributes,
-                             @RequestParam("img") MultipartFile imgFile,
-                             @SessionAttribute("user") UserDto userDto) {
+    @PostMapping("/createQuiz")
+    public String createQuiz(@Valid @ModelAttribute QuizDto quizDto, BindingResult result, RedirectAttributes redirectAttributes) {
+
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        UserDetails userDetails = (UserDetails) auth.getPrincipal();
+        UserDto userDto = userService.getUserDetails(userDetails.getUsername());
 
         if (result.hasErrors()) {
+            result.getAllErrors().forEach(error -> System.out.println(error.toString()));
             redirectAttributes.addFlashAttribute("errors", result.getAllErrors());
-            return "redirect:/quiz/create";
+            return "redirect:/quiz";
         }
 
-        if (!imgFile.isEmpty()) {
-            try {
-                byte[] fileContent = imgFile.getBytes();
-                String imagePath = fileHelper.uploadFile("c:/downloads", imgFile.getOriginalFilename(), fileContent);
-                quizDto.setImg(imagePath);
-            } catch (IOException e) {
-                redirectAttributes.addFlashAttribute("error", "Failed to upload image.");
-                return "redirect:/quiz/create";
-            }
+        if (userDto != null) {
+            quizDto.setUserId(userDto.getId());
+            quizDto.setCreatedByUsername(userDto.getUsername());
         } else {
-            redirectAttributes.addFlashAttribute("error", "Please upload an image.");
-            return "redirect:/quiz/create";
+            quizDto.setUserId(1L);
+            quizDto.setCreatedByUsername("test_user");
         }
 
-        quizDto.setCreatedByUsername(userDto.getUsername());
+        System.out.println("Before saving: " + quizDto);
 
-        // Pass the quizDto to the service
-        quizService.create(quizDto);  // This is correct, pass the DTO here
+        // ✅ Get the saved Quiz entity
+        Quiz savedQuiz = quizService.create(quizDto);
+
+        System.out.println("After saving: " + savedQuiz);
+
+        // ✅ Use the ID from the entity
+        if (savedQuiz.getId() == null) {
+            throw new RuntimeException("Quiz ID was not generated after saving!");
+        }
 
         redirectAttributes.addFlashAttribute("message", "Quiz created successfully!");
-        return "redirect:/quiz";
+        return "redirect:/createQuestion/" + savedQuiz.getId();  // ✅ Use entity ID
     }
 
 
 
+    @GetMapping("/createQuestion/{id}")
+    public String showCreateQuestionForm(@PathVariable Long quizId, Model model) {
+        model.addAttribute("quizId", quizId);
+        model.addAttribute("questions", new ArrayList<QuestionDto>());
+        return "quiz/create/question";
+    }
+
+
+    @PostMapping("/createQuestion/{id}")
+    public String createQuestions(@PathVariable Long quizId, @ModelAttribute List<QuestionDto> questions, RedirectAttributes redirectAttributes) {
+        try {
+            for (QuestionDto questionDto : questions) {
+                questionService.createQuestion(quizId, questionDto);
+            }
+            redirectAttributes.addFlashAttribute("message", "Questions added successfully!");
+        } catch (EntityNotFoundException e) {
+            redirectAttributes.addFlashAttribute("error", "Quiz not found.");
+        }
+        return "redirect:/quiz/create/question/" + quizId;
+    }
+
+    @PostMapping("/finish/{id}")
+    public String finishQuiz(@PathVariable Long quizId, RedirectAttributes redirectAttributes) {
+        redirectAttributes.addFlashAttribute("message", "Quiz completed successfully!");
+        return "redirect:/quiz/view/" + quizId;
+    }
 
     @PutMapping("/{id}")
     public String updateQuiz(@PathVariable Long id, @Valid @ModelAttribute QuizDto quizDto, BindingResult result,
                              RedirectAttributes redirectAttributes) {
-
         if (result.hasErrors()) {
-            // Handle validation errors
             redirectAttributes.addFlashAttribute("errors", result.getAllErrors());
-            return "redirect:/quiz/edit/" + id; // Redirect to the edit form with errors
+            return "redirect:/quiz/edit/" + id;
         }
 
-        // Update the quiz using DTO
         quizService.update(id, quizDto);
         redirectAttributes.addFlashAttribute("message", "Quiz updated successfully!");
-        return "redirect:/quiz/view/" + id; // Redirect to the quiz view page
+        return "redirect:/quiz/view/" + id;
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<?> delete(@PathVariable Long id) {
-        quizService.delete(id);  // Call delete method from the service
+        quizService.delete(id);
         return ResponseEntity.ok().build();
     }
 
     @GetMapping("/edit/{id}")
     public String editQuizForm(@PathVariable Long id, Model model) {
-        QuizDto quizDto = quizService.getById(id);  // Fetch QuizDto to pre-populate the form
+        QuizDto quizDto = quizService.getById(id);
         model.addAttribute("quiz", quizDto);
-        return "quiz/edit";  // Render the edit form
+        return "quiz/edit";
     }
 }
