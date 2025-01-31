@@ -8,6 +8,7 @@ import lombok.Setter;
 
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Getter
 @Setter
@@ -40,6 +41,9 @@ public class User {
     @Column(nullable = false)
     private Role role;
 
+    @ManyToMany(mappedBy = "participants")
+    private List<Quiz> quizzesParticipated;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
@@ -49,6 +53,31 @@ public class User {
     @ManyToOne
     @JoinColumn(name = "created_by")
     private User createdBy;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     @ManyToOne
     @JoinColumn(name = "modified_by")
