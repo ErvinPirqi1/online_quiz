@@ -4,9 +4,9 @@ import dev.ervin.online_quiz.dtos.QuestionDto;
 import dev.ervin.online_quiz.dtos.QuizDto;
 import dev.ervin.online_quiz.dtos.UserDto;
 import dev.ervin.online_quiz.helpers.FileHelper;
+import dev.ervin.online_quiz.helpers.QuestionForm;
 import dev.ervin.online_quiz.models.Answer;
 import dev.ervin.online_quiz.models.Quiz;
-import dev.ervin.online_quiz.models.User;
 import dev.ervin.online_quiz.services.QuestionService;
 import dev.ervin.online_quiz.services.QuizService;
 import dev.ervin.online_quiz.services.UserService;
@@ -21,10 +21,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.IOException;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -114,42 +113,43 @@ public class QuizController {
 
         System.out.println("Before saving: " + quizDto);
 
-        // ✅ Get the saved Quiz entity
+
         Quiz savedQuiz = quizService.create(quizDto);
 
         System.out.println("After saving: " + savedQuiz);
 
-        // ✅ Use the ID from the entity
+
         if (savedQuiz.getId() == null) {
             throw new RuntimeException("Quiz ID was not generated after saving!");
         }
 
         redirectAttributes.addFlashAttribute("message", "Quiz created successfully!");
-        return "redirect:/createQuestion/" + savedQuiz.getId();  // ✅ Use entity ID
+        return "redirect:/createQuestion/" + savedQuiz.getId();
     }
 
 
 
     @GetMapping("/createQuestion/{id}")
-    public String showCreateQuestionForm(@PathVariable Long quizId, Model model) {
-        model.addAttribute("quizId", quizId);
+    public String showCreateQuestionForm(@PathVariable("id") Long id, Model model) {
+        model.addAttribute("quizId", id);
         model.addAttribute("questions", new ArrayList<QuestionDto>());
-        return "quiz/create/question";
+        return "/quiz/createQuestion";
     }
 
-
     @PostMapping("/createQuestion/{id}")
-    public String createQuestions(@PathVariable Long quizId, @ModelAttribute List<QuestionDto> questions, RedirectAttributes redirectAttributes) {
+    public String createQuestions(@PathVariable("id") Long id, @ModelAttribute QuestionForm questionForm, RedirectAttributes redirectAttributes) {
         try {
-            for (QuestionDto questionDto : questions) {
-                questionService.createQuestion(quizId, questionDto);
+            for (QuestionDto questionDto : questionForm.getQuestions()) {
+                questionService.createQuestion(id, questionDto);
             }
             redirectAttributes.addFlashAttribute("message", "Questions added successfully!");
         } catch (EntityNotFoundException e) {
             redirectAttributes.addFlashAttribute("error", "Quiz not found.");
         }
-        return "redirect:/quiz/create/question/" + quizId;
+        return "redirect:/quiz/createQuestion/" + id;
     }
+
+
 
     @PostMapping("/finish/{id}")
     public String finishQuiz(@PathVariable Long quizId, RedirectAttributes redirectAttributes) {
