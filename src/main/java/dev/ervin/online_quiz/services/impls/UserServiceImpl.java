@@ -20,6 +20,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
@@ -35,6 +36,8 @@ public class UserServiceImpl implements UserService, UserDetailsService {
         this.userMapper = userMapper;
         this.passwordEncoder = passwordEncoder;
     }
+
+
 
 
     //  USER REGISTRATION
@@ -126,9 +129,12 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
 
 
-    private User getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    @Override
+    public User getUserByUsername(String username) {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        return userOptional.orElse(null); // Return null if the user is not found
+        // OR, if you want to throw an exception if the user is not found:
+        // return userOptional.orElseThrow(() -> new UsernameNotFoundException("User not found"));
     }
 
     private void logUserDetails(User user) {

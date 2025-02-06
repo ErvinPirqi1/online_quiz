@@ -8,7 +8,7 @@ import java.util.List;
 public interface QuestionService extends BaseService<QuestionDto, Long> {
     List<QuestionDto> getAllQuestionsByQuiz(Long quizId);
 
-    void createQuestion(Long quizId, QuestionDto questionDto);
+    void createQuestion(Long quizId, QuestionDto questionDto, String username);
 
     List<Answer> getAnswersByQuestionId(Long questionId);
 }

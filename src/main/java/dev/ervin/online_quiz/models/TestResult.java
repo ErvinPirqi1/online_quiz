@@ -22,6 +22,9 @@ public class TestResult {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "current_question_index")
+    private Integer currentQuestionIndex;
+
     @ManyToOne
     @JoinColumn(name = "quiz_id", nullable = false)
     private Quiz quiz;

@@ -32,13 +32,19 @@ public class Quiz {
     @Column(nullable = false)
     private Short visibility; // 0=private, 1=public
 
+    @Column(nullable = false)
+    private Short status; // 0=active, 1=archived
+
+    @Version
+    private Integer version;
+
     @ManyToMany
     @JoinTable(
             name = "quiz_participation",
             joinColumns = @JoinColumn(name = "quiz_id"),
             inverseJoinColumns = @JoinColumn(name = "user_id")
     )
-    private List<User> participants; // List of students who participated in the quiz
+    private List<User> participants;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
@@ -46,8 +52,8 @@ public class Quiz {
     @Column
     private LocalDateTime modifiedAt;
 
-    @ManyToOne
-    @JoinColumn(name = "created_by", nullable = false)
+    @ManyToOne  // Or @OneToOne, depending on your relationship
+    @JoinColumn(name = "created_by", referencedColumnName = "id") // Important: created_by is the column in quizzes, id is the primary key in users
     private User createdBy;
 
     @ManyToOne

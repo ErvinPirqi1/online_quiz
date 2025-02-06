@@ -10,4 +10,6 @@ public interface UserService extends BaseService<User, Long> {
     void registerUser(UserRegistrationRequestDto userRegisterDto);
 
     UserDto getUserDetails(String username);
+
+    User getUserByUsername(String username);
 }

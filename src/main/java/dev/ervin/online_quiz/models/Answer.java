@@ -28,7 +28,7 @@ public class Answer {
     private String optionText;
 
     @Column(nullable = false)
-    private Boolean isCorrect = false;
+    private Boolean isCorrect = false; // Now a Boolean
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

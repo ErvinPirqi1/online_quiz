@@ -27,10 +27,6 @@
                 </div>
 
 
-<!--                <span>Welcome, <span th:text="${#authentication.principal.id}">Username</span></span>-->
-<!--                <span>Welcome, <span th:text="${#authentication != null and #authentication.principal != null ? #authentication.principal.username : 'Guest'}">Username</span></span>-->
-
-
                 <div class="row mb-3">
                     <label for="description" class="col-sm-2 col-form-label">Description:</label>
                     <div class="col-sm-6">
@@ -40,14 +36,6 @@
                         <span class="text-danger" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
                     </div>
                 </div>
-
-<!--                <div class="row mb-3">-->
-<!--                    <label for="img" class="col-sm-2 col-form-label">Quiz Image:</label>-->
-<!--                    <div class="col-sm-6">-->
-<!--                        <input type="file" class="form-control" th:field="*{img}" id="img" name="img" accept="image/*" required onchange="previewImage(event)"/>-->
-<!--                        <img id="imagePreview" class="mt-2 img-thumbnail" style="display:none; width: 150px; height: 150px;"/>-->
-<!--                    </div>-->
-<!--                </div>-->
 
                 <div class="row mb-3">
                     <label for="category" class="col-sm-2 col-form-label">Category:</label>

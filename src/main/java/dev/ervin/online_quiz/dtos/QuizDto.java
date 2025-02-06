@@ -14,6 +14,7 @@ public class QuizDto {
 
     private Long id;
     private Long userId;
+    private Long createdBy; // Or private User createdBy;
     private String title;
     private String description;
     private String category;
@@ -23,4 +24,5 @@ public class QuizDto {
     private String createdByUsername;
     private String modifiedByUsername;
     private Boolean isDeleted = false;
+    private Short status = 1; // 0= active, 1= archived
 }

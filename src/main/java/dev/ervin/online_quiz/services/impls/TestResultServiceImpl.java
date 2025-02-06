@@ -23,6 +23,19 @@ public class TestResultServiceImpl implements TestResultService {
     }
 
     @Override
+    public TestResult update(TestResult testResult) {
+        TestResult existingTestResult = testResultRepository.findById(testResult.getId())
+                .orElseThrow(() -> new EntityNotFoundException("TestResult not found"));
+
+        // Update the properties of the existingTestResult with the values from testResult.
+        existingTestResult.setScore(testResult.getScore());
+        existingTestResult.setCurrentQuestionIndex(testResult.getCurrentQuestionIndex());
+        // ... update other properties
+
+        return testResultRepository.save(existingTestResult); // Save the updated entity
+    }
+
+    @Override
     public TestResult update(Long id, TestResult testResultDetails) {
         TestResult testResult = testResultRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Test result not found with ID: " + id));
@@ -51,5 +64,10 @@ public class TestResultServiceImpl implements TestResultService {
     @Override
     public List<TestResult> getTestResultsByUser(Long userId) {
         return testResultRepository.findAllByUserId(userId);
+    }
+
+    @Override
+    public TestResult save(TestResult testResult) {
+        return testResultRepository.save(testResult); // Save using the repository
     }
 }

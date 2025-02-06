@@ -1,10 +1,14 @@
 package dev.ervin.online_quiz.config;
 
 import dev.ervin.online_quiz.config.CustomAuthenticationFailureHandler;
+import dev.ervin.online_quiz.infrastructure.QuizPermissionEvaluator;
 import dev.ervin.online_quiz.services.impls.UserServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.access.expression.method.DefaultMethodSecurityExpressionHandler;
+import org.springframework.security.access.expression.method.MethodSecurityExpressionHandler;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -17,6 +21,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
+    @Autowired
+    private QuizPermissionEvaluator quizPermissionEvaluator;
 
     private final UserServiceImpl userServiceImpl;
     private final CustomAuthenticationFailureHandler failureHandler;
@@ -28,14 +34,16 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        String[] publicUrls = {"/", "/login", "/register", "/quiz"};  // Add /quiz/list to the public URLs
+        String[] publicUrls = {"/", "/login", "/register", "/quiz/list",};  // Add /quiz/list to the public URLs
         String[] staticResources = {"/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/fonts/**"};
 
         http
                 .csrf(csrf -> csrf.disable())
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(staticResources).permitAll()  // Allow access to static resources
-                        .requestMatchers(publicUrls).permitAll()  // Allow access to the public URLs
+                        .requestMatchers(staticResources).permitAll()
+                        .requestMatchers(publicUrls).permitAll()
+                        .requestMatchers("/quiz/editQuestion/**").hasAnyRole("TEACHER", "ADMIN")
+                        .requestMatchers("/quiz/createQuestion/**").hasAnyRole("TEACHER", "ADMIN") // Only teachers & admins can create quizzes
                         .requestMatchers("/teacher/**").hasRole("TEACHER")  // Require role TEACHER for /teacher/** URLs
                         .requestMatchers("/student/**").hasRole("STUDENT")  // Require role STUDENT for /student/** URLs
                         .anyRequest().authenticated()  // Any other request requires authentication
@@ -81,5 +89,12 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
+    }
+
+    @Bean
+    public MethodSecurityExpressionHandler methodSecurityExpressionHandler() {
+        DefaultMethodSecurityExpressionHandler handler = new DefaultMethodSecurityExpressionHandler();
+        handler.setPermissionEvaluator(quizPermissionEvaluator);
+        return handler;
     }
 }
