@@ -14,13 +14,15 @@ public class QuizDto {
 
     private Long id;
     private Long userId;
+    private Long createdBy;
     private String title;
     private String description;
     private String category;
-    private Short visibility; // 0=private, 1=public
+    private Short visibility;
     private LocalDateTime createdAt;
     private LocalDateTime modifiedAt;
     private String createdByUsername;
     private String modifiedByUsername;
     private Boolean isDeleted = false;
+    private Short status = 1;
 }

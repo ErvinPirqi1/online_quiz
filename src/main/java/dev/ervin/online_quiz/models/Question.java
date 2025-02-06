@@ -33,7 +33,7 @@ public class Question {
     private String question;
 
     @Column(nullable = false)
-    private Short questionType; // 0=MCQ, 1=True/False, etc.
+    private Short questionType;
 
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;

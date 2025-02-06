@@ -4,16 +4,14 @@ import dev.ervin.online_quiz.dtos.UserDto;
 import dev.ervin.online_quiz.dtos.UserRegistrationRequestDto;
 import dev.ervin.online_quiz.services.UserService;
 import jakarta.servlet.http.HttpSession;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 
-@Controller
+@RestController
+@RequestMapping("/api/users")
 public class UserController {
 
     private final UserService userService;
@@ -22,40 +20,28 @@ public class UserController {
         this.userService = userService;
     }
 
-    // Registration page
-    @GetMapping("/register")
-    public String showRegistrationForm(Model model) {
-        model.addAttribute("userRegisterDto", new UserRegistrationRequestDto());
-        return "register";
-    }
-
-    // Handle user registration
+    // POST /api/users/register
     @PostMapping("/register")
-    public String registerUser(@ModelAttribute UserRegistrationRequestDto userRegisterDto) {
+    public ResponseEntity<?> registerUser(@RequestBody UserRegistrationRequestDto userRegisterDto) {
         try {
             userService.registerUser(userRegisterDto);
-            return "redirect:/login?registrationSuccess"; // Redirect to login page after successful registration
+            return ResponseEntity.ok("User registered successfully.");
         } catch (IllegalArgumentException e) {
-            // Handle error (like username/email already exists)
-            return "redirect:/register?error=" + e.getMessage();
+            return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
 
-    // Login page (Spring Security handles the login)
-    @GetMapping("/login")
-    public String showLoginForm() {
-        return "login";
-    }
-
-    // Post-login handler to set user session
-    @PostMapping("/login")
-    public String postLogin(HttpSession session) {
+    // GET /api/users/me
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(HttpSession session) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !(auth.getPrincipal() instanceof UserDetails)) {
+            return ResponseEntity.status(401).body("Not authenticated");
+        }
+
         UserDetails userDetails = (UserDetails) auth.getPrincipal();
         UserDto userDto = userService.getUserDetails(userDetails.getUsername());
-        session.setAttribute("user", userDto);
-        System.out.println("User logged in: " + userDto);
-        return "redirect:/"; // Redirect to the home page or any other page
-
+        session.setAttribute("user", userDto); // Optional: store in session if needed
+        return ResponseEntity.ok(userDto);
     }
 }

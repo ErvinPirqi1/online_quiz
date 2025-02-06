@@ -6,5 +6,8 @@ import java.util.List;
 
 public interface StudentAnswerService extends BaseService<StudentAnswer, Long> {
     List<StudentAnswer> getAnswersByTestResult(Long testResultId);
+
+
+    StudentAnswer save(StudentAnswer studentAnswer);
 }
 

@@ -13,13 +13,13 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class UserServiceImpl implements UserService, UserDetailsService {
@@ -37,7 +37,9 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
 
-    //  USER REGISTRATION
+
+
+
     @Override
     public void registerUser(UserRegistrationRequestDto userRegisterDto) {
         validateUserDetails(userRegisterDto);
@@ -64,7 +66,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
 
-    //  USER MANAGEMENT (CRUD)
+
     @Override
     public User create(User entity) {
         return userRepository.save(entity);
@@ -110,7 +112,7 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
 
-    //  USER AUTHENTICATION (SPRING SECURITY)
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         User user = userRepository.findByUsername(username)
@@ -126,9 +128,11 @@ public class UserServiceImpl implements UserService, UserDetailsService {
 
 
 
-    private User getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    @Override
+    public User getUserByUsername(String username) {
+        Optional<User> userOptional = userRepository.findByUsername(username);
+        return userOptional.orElse(null);
+
     }
 
     private void logUserDetails(User user) {
@@ -145,11 +149,21 @@ public class UserServiceImpl implements UserService, UserDetailsService {
     }
 
 
-    //  GET USER DETAILS
+
     @Override
     public UserDto getUserDetails(String username) {
         User user = getUserByUsername(username);
         return userMapper.toDto(user);
+    }
+
+    @Override
+    public boolean existsByUsername(String username) {
+        return userRepository.existsByUsername(username);
+    }
+
+    @Override
+    public boolean existsByEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
 
 }

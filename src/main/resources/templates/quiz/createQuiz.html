@@ -1,101 +1,132 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" th:replace="~{shared/_layout::layout('Create Quiz', ~{::div#cont}, ~{::style#css}, ~{::script#scr})}">
 <head>
+    <meta charset="UTF-8">
     <title>Create Quiz</title>
-    <link rel="stylesheet" th:href="@{/css/bootstrap.min.css}">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style id="css">
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+        }
+
+        .card {
+            border: none; /* Remove default border */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add subtle shadow */
+            border-radius: 10px; /* Rounded corners */
+        }
+
+        .card-header {
+            background-color: #007bff; /* Blue header */
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 500;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        .form-label {
+            font-weight: 500;
+        }
+
+        .form-control {
+            border-radius: 5px;
+            padding: 10px;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            border-radius: 5px;
+            padding: 10px 20px;
+        }
+
+        .btn-danger {
+            background-color: #dc3545;
+            border-color: #dc3545;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin-left: 10px; /* Space between buttons */
+        }
+        .btn-secondary{
+            background-color: #6c757d;
+            border-color: #6c757d;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin-left: 10px; /* Space between buttons */
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+    </style>
 </head>
 <body>
-<div class="container mt-5">
-    <div class="card">
-        <div class="card-body">
-            <h5 class="card-title">Create a New Quiz</h5>
 
-            <form th:action="@{/quiz/createQuiz}" th:object="${quiz}" method="post">
-
-
-                <!-- Hidden field for username (temporary until user auth is implemented) -->
-<!--                <input type="hidden" th:field="*{createdByUsername}" th:value="${user != null ? user.username : 'test_user'}"/>-->
-
-                <div class="row mb-3">
-                    <label for="title" class="col-sm-2 col-form-label">Quiz Title:</label>
-                    <div class="col-sm-6">
-                        <input type="text" class="form-control" th:field="*{title}" required minlength="3" maxlength="100"/>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="text-danger" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></span>
-                    </div>
+<div class="container mt-5" id="cont">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Create a New Quiz</h5>
                 </div>
+                <div class="card-body">
+                    <form th:action="@{/quiz/createQuiz}" th:object="${quiz}" method="post">
 
+                        <div class="mb-3">
+                            <label for="title" class="form-label">Quiz Title:</label>
+                            <input type="text" class="form-control" th:field="*{title}" required minlength="3" maxlength="100"/>
+                            <div class="error-message" th:if="${#fields.hasErrors('title')}" th:errors="*{title}"></div>
+                        </div>
 
-<!--                <span>Welcome, <span th:text="${#authentication.principal.id}">Username</span></span>-->
-<!--                <span>Welcome, <span th:text="${#authentication != null and #authentication.principal != null ? #authentication.principal.username : 'Guest'}">Username</span></span>-->
+                        <div class="mb-3">
+                            <label for="description" class="form-label">Description:</label>
+                            <textarea class="form-control" th:field="*{description}" rows="3" required></textarea>
+                            <div class="error-message" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></div>
+                        </div>
 
+                        <div class="mb-3">
+                            <label for="category" class="form-label">Category:</label>
+                            <input type="text" class="form-control" th:field="*{category}" required/>
+                            <div class="error-message" th:if="${#fields.hasErrors('category')}" th:errors="*{category}"></div>
+                        </div>
 
-                <div class="row mb-3">
-                    <label for="description" class="col-sm-2 col-form-label">Description:</label>
-                    <div class="col-sm-6">
-                        <textarea class="form-control" th:field="*{description}" rows="3" required></textarea>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="text-danger" th:if="${#fields.hasErrors('description')}" th:errors="*{description}"></span>
-                    </div>
+                        <div class="mb-3">
+                            <label for="visibility" class="form-label">Visibility:</label>
+                            <select class="form-control" th:field="*{visibility}" required>
+                                <option value="0">Private</option>
+                                <option value="1">Public</option>
+                            </select>
+                            <div class="error-message" th:if="${#fields.hasErrors('visibility')}" th:errors="*{visibility}"></div>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="submit" class="btn btn-primary">Create Quiz</button>
+                            <button type="reset" class="btn btn-danger">Reset</button>
+                            <a onclick="window.history.back()" class="btn btn-secondary">Back</a>
+                        </div>
+
+                    </form>
                 </div>
-
-<!--                <div class="row mb-3">-->
-<!--                    <label for="img" class="col-sm-2 col-form-label">Quiz Image:</label>-->
-<!--                    <div class="col-sm-6">-->
-<!--                        <input type="file" class="form-control" th:field="*{img}" id="img" name="img" accept="image/*" required onchange="previewImage(event)"/>-->
-<!--                        <img id="imagePreview" class="mt-2 img-thumbnail" style="display:none; width: 150px; height: 150px;"/>-->
-<!--                    </div>-->
-<!--                </div>-->
-
-                <div class="row mb-3">
-                    <label for="category" class="col-sm-2 col-form-label">Category:</label>
-                    <div class="col-sm-6">
-                        <input type="text" class="form-control" th:field="*{category}" required/>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="text-danger" th:if="${#fields.hasErrors('category')}" th:errors="*{category}"></span>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <label for="visibility" class="col-sm-2 col-form-label">Visibility:</label>
-                    <div class="col-sm-6">
-                        <select class="form-control" th:field="*{visibility}" required>
-                            <option value="0">Private</option>
-                            <option value="1">Public</option>
-                        </select>
-                    </div>
-                    <div class="col-sm-4">
-                        <span class="text-danger" th:if="${#fields.hasErrors('visibility')}" th:errors="*{visibility}"></span>
-                    </div>
-                </div>
-
-                <div class="row mb-3">
-                    <div class="col-sm-2"></div>
-                    <div class="col-sm-6">
-                        <button type="submit" class="btn btn-primary">Create Quiz</button>
-                        <button type="reset" class="btn btn-danger">Reset</button>
-                        <a onclick="window.history.back()" class="btn btn-secondary">Back</a>
-                    </div>
-                </div>
-
-            </form>
+            </div>
         </div>
     </div>
 </div>
 
-<script>
-    function previewImage(event) {
-        let reader = new FileReader();
-        reader.onload = function() {
-            let imgElement = document.getElementById('imagePreview');
-            imgElement.src = reader.result;
-            imgElement.style.display = 'block';
-        };
-        reader.readAsDataURL(event.target.files[0]);
-    }
+<script id="scr">
+    /* Your scripts if any */
 </script>
+
 </body>
 </html>

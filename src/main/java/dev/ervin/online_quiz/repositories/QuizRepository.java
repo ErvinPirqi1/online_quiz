@@ -23,4 +23,9 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
     List<Quiz> findByParticipantsUsername(String username);
 
     List<Quiz> findByCreatedByUsername(String createdByUsername);
+
+    @Override
+    Optional<Quiz> findById(Long id); // Add logging here
+
+//    Optional<Quiz> findByIdWithLog(Long id);
 }

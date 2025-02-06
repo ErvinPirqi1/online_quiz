@@ -64,15 +64,15 @@
                   <nav>
                     <ul id="navigation">
                       <!-- Show user information if logged in -->
-                      <li th:if="${#authorization.expression('isAuthenticated()') and #authentication.principal instanceof T(org.springframework.security.core.userdetails.UserDetails)}">
-                        <span>Welcome, <span th:text="${#authentication.principal.username}">Username</span></span>
-                        <span>Role: <span th:text="${#authentication.principal.authorities[0].authority}">Role</span></span>
-                      </li>
+<!--                      <li th:if="${#authorization.expression('isAuthenticated()') and #authentication.principal instanceof T(org.springframework.security.core.userdetails.UserDetails)}">-->
+<!--                        <span>Welcome, <span th:text="${#authentication.principal.username}">Username</span></span>-->
+<!--                        <span>Role: <span th:text="${#authentication.principal.authorities[0].authority}">Role</span></span>-->
+<!--                      </li>-->
 
                       <!-- Fallback for guests -->
-                      <li th:if="${#authorization.expression('!isAuthenticated()') or #authentication.principal == 'anonymousUser'}">
-                        <span>Welcome, Guest</span>
-                      </li>
+<!--                      <li th:if="${#authorization.expression('!isAuthenticated()') or #authentication.principal == 'anonymousUser'}">-->
+<!--                        <span>Welcome, Guest</span>-->
+<!--                      </li>-->
 
                       <!-- Menu items always visible -->
                       <li class="active"><a th:href="@{/}">Home</a></li>
@@ -87,6 +87,10 @@
                       </li>
                       <li class="button-header" th:if="${#authorization.expression('!isAuthenticated()')}">
                         <a href="#" class="btn btn3" th:href="@{/login}">Log in</a>
+                      </li>
+
+                      <li class="button-header" th:if="${#authorization.expression('hasRole(''ROLE_ADMIN'')')}">
+                        <a href="#" class="btn btn3" th:href="@{/admin/dashboard}">Admin Panel</a>
                       </li>
 
                       <!-- Show logout button only if the user is logged in -->
@@ -120,7 +124,6 @@
             <div class="hero__caption">
               <h1 data-animation="fadeInLeft" data-delay="0.2s">Online learning<br> platform</h1>
               <p data-animation="fadeInLeft" data-delay="0.4s">Build skills with courses, certificates, and degrees online from world-class universities and companies</p>
-              <a href="#" class="btn hero-btn" data-animation="fadeInLeft" data-delay="0.7s">Join for Free</a>
             </div>
           </div>
         </div>

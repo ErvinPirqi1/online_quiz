@@ -1,8 +1,10 @@
 package dev.ervin.online_quiz.services.impls;
 
 import dev.ervin.online_quiz.dtos.QuizDto;
+import dev.ervin.online_quiz.models.Question;
 import dev.ervin.online_quiz.models.Quiz;
 import dev.ervin.online_quiz.models.User;
+import dev.ervin.online_quiz.repositories.QuestionRepository;
 import dev.ervin.online_quiz.repositories.QuizRepository;
 import dev.ervin.online_quiz.repositories.UserRepository;
 import dev.ervin.online_quiz.services.QuizService;
@@ -11,7 +13,9 @@ import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -19,55 +23,75 @@ public class QuizServiceImpl implements QuizService {
 
     private final UserRepository userRepository;
     private final QuizRepository quizRepository;
-    private final QuizMapper quizMapper;  // Assuming you have a QuizMapper to map between Quiz and QuizDto
+    private final QuizMapper quizMapper;
+    private final QuestionRepository questionRepository;
 
     @Autowired
-    public QuizServiceImpl(UserRepository userRepository, QuizRepository quizRepository, QuizMapper quizMapper) {
+    public QuizServiceImpl(UserRepository userRepository, QuizRepository quizRepository, QuizMapper quizMapper, QuestionRepository questionRepository) {
         this.userRepository = userRepository;
         this.quizRepository = quizRepository;
         this.quizMapper = quizMapper;
+        this.questionRepository = questionRepository;
     }
 
-    public Quiz create(QuizDto quizDto) {
-        Quiz quiz = quizMapper.toEntity(quizDto);
-
-        User createdBy = userRepository.findByUsername(quizDto.getCreatedByUsername())
-                .orElseThrow(() -> new RuntimeException("User not found with username: " + quizDto.getCreatedByUsername()));
-
-        User user = userRepository.findById(quizDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found with ID: " + quizDto.getUserId()));
-
-        quiz.setCreatedBy(createdBy);
-        quiz.setUser(user);
-
-        // ✅ Save the quiz and return the saved entity
+    @Override
+    public Quiz create(Quiz quiz) {
         return quizRepository.save(quiz);
     }
-
-
-
-
-
 
     @Override
     public QuizDto update(Long id, QuizDto quizDto) {
         Quiz existingQuiz = quizRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz not found with ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Quiz not found"));
 
         existingQuiz.setTitle(quizDto.getTitle());
         existingQuiz.setDescription(quizDto.getDescription());
         existingQuiz.setCategory(quizDto.getCategory());
         existingQuiz.setVisibility(quizDto.getVisibility());
+        existingQuiz.setStatus(quizDto.getStatus());
+        existingQuiz.setModifiedAt(LocalDateTime.now());
+
+        User modifiedBy = userRepository.findByUsername(quizDto.getModifiedByUsername())
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + quizDto.getModifiedByUsername()));
+        existingQuiz.setModifiedBy(modifiedBy);
 
         Quiz updatedQuiz = quizRepository.save(existingQuiz);
         return quizMapper.toDto(updatedQuiz);
     }
 
     @Override
-    public QuizDto getById(Long id) {
+    public void toggleVisibility(Long id, QuizDto quizDto) {
         Quiz quiz = quizRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Quiz not found with ID: " + id));
-        return quizMapper.toDto(quiz);  // Convert entity to DTO
+                .orElseThrow(() -> new EntityNotFoundException("Quiz not found"));
+
+        quiz.setVisibility((short) (quiz.getVisibility() == 0 ? 1 : 0));
+        quiz.setModifiedAt(LocalDateTime.now());
+        User modifiedBy = userRepository.findByUsername(quizDto.getModifiedByUsername())
+                .orElseThrow(() -> new EntityNotFoundException("User not found: " + quizDto.getModifiedByUsername()));
+        quiz.setModifiedBy(modifiedBy);
+        quizRepository.save(quiz);
+    }
+
+    @Override
+    public QuizDto getById(Long id) {
+        Optional<Quiz> quizOptional = quizRepository.findById(id);
+        if (quizOptional.isPresent()) {
+            Quiz quiz = quizOptional.get();
+
+            System.out.println("Quiz retrieved from repository: " + (quiz.getCreatedBy() != null ? quiz.getCreatedBy().getUsername() : null));
+
+            QuizDto quizDto = quizMapper.toDto(quiz);
+            System.out.println("Quiz DTO after mapping: " + quizDto.getCreatedByUsername());
+            return quizDto;
+        } else {
+            return null;
+        }
+    }
+
+    @Override
+    public Quiz getByIdInTake(Long id) {
+        return quizRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Quiz not found"));
     }
 
     @Override
@@ -91,7 +115,6 @@ public class QuizServiceImpl implements QuizService {
         Quiz quiz = quizRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Quiz not found with ID: " + id));
 
-
         quiz.setIsDeleted(true);
         quizRepository.save(quiz);
     }
@@ -99,7 +122,7 @@ public class QuizServiceImpl implements QuizService {
     public List<QuizDto> getQuizzesCreatedByTeacher(String teacherUsername) {
         List<Quiz> quizzes = quizRepository.findByCreatedByUsername(teacherUsername);
         return quizzes.stream()
-                .map(quiz -> quizMapper.toDto(quiz)) // Assuming you have a method to convert Quiz to QuizDto
+                .map(quiz -> quizMapper.toDto(quiz))
                 .collect(Collectors.toList());
     }
 
@@ -110,8 +133,10 @@ public class QuizServiceImpl implements QuizService {
                 .collect(Collectors.toList());
     }
 
-
+    @Override
+    public List<Question> getQuestionsByQuizId(Long quizId) {
+        return questionRepository.findByQuizId(quizId);
+    }
 
 
 }
-

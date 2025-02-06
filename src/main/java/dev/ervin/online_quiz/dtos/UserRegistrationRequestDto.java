@@ -21,11 +21,7 @@ public class UserRegistrationRequestDto {
             message = "Password must contain at least one uppercase letter, one lowercase letter and one digit")
     private String password;
 
-    @Size(min = 8, max = 100, message = "Password must be between 8 and 100 characters long")
-    @NotBlank(message = "Password is not provided, blank or empty")
-    @Pattern(regexp = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d).*$",
-            message = "Password must contain at least one uppercase letter, one lowercase letter and one digit")
-    @AssertTrue
+    @NotBlank(message = "Confirm password is not provided, blank or empty")
     private String confirmPassword;
 
     @Size(min = 2, max = 50, message = "Name must be between 2 and 50 characters long")

@@ -1,85 +1,64 @@
 package dev.ervin.online_quiz.config;
 
-import dev.ervin.online_quiz.config.CustomAuthenticationFailureHandler;
+import dev.ervin.online_quiz.security.JwtAuthenticationFilter;
+import dev.ervin.online_quiz.security.JwtUtil;
 import dev.ervin.online_quiz.services.impls.UserServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
-import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-@EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final UserServiceImpl userServiceImpl;
-    private final CustomAuthenticationFailureHandler failureHandler;
+    private final JwtUtil jwtUtil;
 
-    public SecurityConfig(@Lazy UserServiceImpl userServiceImpl, CustomAuthenticationFailureHandler failureHandler) {
+    public SecurityConfig(@Lazy UserServiceImpl userServiceImpl, JwtUtil jwtUtil) {
         this.userServiceImpl = userServiceImpl;
-        this.failureHandler = failureHandler;
+        this.jwtUtil = jwtUtil;
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        return new JwtAuthenticationFilter(jwtUtil, userServiceImpl);
     }
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        String[] publicUrls = {"/", "/login", "/register", "/quiz"};  // Add /quiz/list to the public URLs
-        String[] staticResources = {"/static/**", "/assets/**", "/css/**", "/js/**", "/images/**", "/fonts/**"};
-
         http
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable()) // Disable CSRF for REST APIs
+
                 .authorizeHttpRequests(authz -> authz
-                        .requestMatchers(staticResources).permitAll()  // Allow access to static resources
-                        .requestMatchers(publicUrls).permitAll()  // Allow access to the public URLs
-                        .requestMatchers("/teacher/**").hasRole("TEACHER")  // Require role TEACHER for /teacher/** URLs
-                        .requestMatchers("/student/**").hasRole("STUDENT")  // Require role STUDENT for /student/** URLs
-                        .anyRequest().authenticated()  // Any other request requires authentication
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .anyRequest().authenticated()
                 )
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .loginProcessingUrl("/login")  // Ensure this matches your form action
-                        .failureHandler(failureHandler)
-                        .defaultSuccessUrl("/", true)
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .logoutUrl("/logout")
-                        .logoutSuccessUrl("/")
-                        .invalidateHttpSession(true)
-                        .deleteCookies("JSESSIONID")
-                        .permitAll()
-                )
+
                 .sessionManagement(session -> session
-                        .maximumSessions(1)
-                        .expiredUrl("/login?expired")
-                );
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                )
+
+                .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
-
-
-
 
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
 
-
-    public void testPasswordVerification(String rawPassword, String storedPassword) {
-        boolean matches = passwordEncoder().matches(rawPassword, storedPassword);
-        System.out.println("Password matches: " + matches);
-    }
-
-
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
     }
 }

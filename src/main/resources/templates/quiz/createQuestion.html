@@ -1,104 +1,128 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="en" th:replace="~{shared/_layout::layout('Add Questions', ~{::div#cont}, ~{::style#css}, ~{::script#scr})}">
 <head>
+    <meta charset="UTF-8">
     <title>Add Questions</title>
-    <script>
-        function addQuestionForm() {
-            let container = document.getElementById("questionsContainer");
-
-            let questionIndex = container.children.length;
-
-            let questionForm = document.createElement("div");
-            questionForm.classList.add("question-form");
-            questionForm.innerHTML = `
-                <h3>Question ${questionIndex + 1}</h3>
-                <label>Question:</label>
-                <input type="text" name="questions[${questionIndex}].questionText" required/><br>
-
-                <label>Type:</label>
-                <select name="questions[${questionIndex}].questionType" onchange="toggleOptions(${questionIndex}, this.value)">
-                    <option value="0">Multiple Choice</option>
-                    <option value="1">True/False</option>
-                </select><br>
-
-                <div id="optionsContainer${questionIndex}">
-                    <div>
-                        <label>Option 1:</label>
-                        <input type="text" name="questions[${questionIndex}].options[0].text" required/>
-                        <input type="radio" name="questions[${questionIndex}].correctAnswer" value="0"/> Correct?
-                    </div>
-                    <div>
-                        <label>Option 2:</label>
-                        <input type="text" name="questions[${questionIndex}].options[1].text" required/>
-                        <input type="radio" name="questions[${questionIndex}].correctAnswer" value="1"/> Correct?
-                    </div>
-                </div>
-
-                <button type="button" onclick="addOption(${questionIndex})">Add Another Option</button>
-                <hr>
-            `;
-            container.appendChild(questionForm);
-        }
-
-        function addOption(questionIndex) {
-            let optionsContainer = document.getElementById("optionsContainer" + questionIndex);
-            let optionCount = optionsContainer.children.length;
-
-            let optionDiv = document.createElement("div");
-            optionDiv.innerHTML = `
-                <label>Option ${optionCount + 1}:</label>
-                <input type="text" name="questions[${questionIndex}].options[${optionCount}].text" required/>
-                <input type="radio" name="questions[${questionIndex}].correctAnswer" value="${optionCount}"/> Correct?
-            `;
-            optionsContainer.appendChild(optionDiv);
-        }
-
-        function toggleOptions(questionIndex, type) {
-            let optionsContainer = document.getElementById("optionsContainer" + questionIndex);
-            if (type == "1") {  // True/False
-                optionsContainer.innerHTML = `
-                    <div>
-                        <label>True</label>
-                        <input type="radio" name="questions[${questionIndex}].correctAnswer" value="true" required/>
-                    </div>
-                    <div>
-                        <label>False</label>
-                        <input type="radio" name="questions[${questionIndex}].correctAnswer" value="false" required/>
-                    </div>
-                `;
-            } else {  // Multiple Choice
-                optionsContainer.innerHTML = `
-                    <div>
-                        <label>Option 1:</label>
-                        <input type="text" name="questions[${questionIndex}].options[0].text" required/>
-                        <input type="radio" name="questions[${questionIndex}].correctAnswer" value="0"/> Correct?
-                    </div>
-                    <div>
-                        <label>Option 2:</label>
-                        <input type="text" name="questions[${questionIndex}].options[1].text" required/>
-                        <input type="radio" name="questions[${questionIndex}].correctAnswer" value="1"/> Correct?
-                    </div>
-                `;
-            }
-        }
-    </script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style id="css">
+        /* ... (CSS styles remain the same as the previous example) ... */
+    </style>
 </head>
 <body>
 
-<h2>Add Questions to Quiz</h2>
+<div class="container mt-5" id="cont">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Add Questions to Quiz</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/quiz/createQuestion/{quizId}(quizId=${quizId})}" method="post" th:object="${questionForm}">
+                        <input type="hidden" name="quizId" th:value="${quizId}" />
+                        <div id="questionsContainer">
+                        </div>
 
-<form th:action="@{/quiz/create/question/{quizId}(quizId=${quizId})}" method="post">
-    <div id="questionsContainer">
-        <!-- Questions will be dynamically added here -->
+                        <button type="button" class="btn btn-primary" onclick="addQuestionForm()">Add Question</button>
+                        <button type="submit" class="btn btn-primary">Submit Questions</button>
+                        <a onclick="window.history.back()" class="btn btn-secondary">Back</a>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
+</div>
 
-    <button type="button" onclick="addQuestionForm()">Add Question</button>
-    <button type="submit">Submit Questions</button>
-</form>
+<script id="scr" th:inline="javascript">
+    /*<![CDATA[*/
+    function addQuestionForm() {
+        let container = document.getElementById("questionsContainer");
+        let questionIndex = container.children.length;
 
-<form th:action="@{/quiz/finish/{quizId}(quizId=${quizId})}" method="post">
-    <button type="submit">Finish Quiz</button>
-</form>
+        let questionDiv = document.createElement("div");
+        questionDiv.classList.add("question-form");
+        questionDiv.innerHTML = `
+            <h3>Question ${questionIndex + 1}</h3>
+            <label for="questionText${questionIndex}">Question:</label><br>
+            <input type="text" id="questionText${questionIndex}" name="questions[${questionIndex}].questionText" required/><br><br>
+
+            <label for="questionType${questionIndex}">Type:</label><br>
+            <select id="questionType${questionIndex}" name="questions[${questionIndex}].questionType" onchange="toggleOptions(${questionIndex}, this.value)" required>
+                <option value="0">Multiple Choice</option>
+                <option value="1">True/False</option>
+            </select><br><br>
+
+            <div id="optionsContainer${questionIndex}">
+                <div>
+                    <label for="optionText0${questionIndex}">Option 1:</label><br>
+                    <input type="text" id="optionText0${questionIndex}" name="questions[${questionIndex}].answers[0].text" required/>
+                    <input type="checkbox" name="questions[${questionIndex}].answers[0].isCorrect" id="isCorrect0${questionIndex}"/>
+                    <label for="isCorrect0${questionIndex}">Correct?</label><br><br>
+                </div>
+                <div>
+                    <label for="optionText1${questionIndex}">Option 2:</label><br>
+                    <input type="text" id="optionText1${questionIndex}" name="questions[${questionIndex}].answers[1].text" required/>
+                    <input type="checkbox" name="questions[${questionIndex}].answers[1].isCorrect" id="isCorrect1${questionIndex}"/>
+                    <label for="isCorrect1${questionIndex}">Correct?</label><br><br>
+                </div>
+            </div>
+
+            <button type="button" onclick="addOption(${questionIndex})">Add Another Option</button>
+            <hr>
+        `;
+        container.appendChild(questionDiv);
+    }
+
+    function addOption(questionIndex) {
+        let optionsContainer = document.getElementById("optionsContainer" + questionIndex);
+        let optionCount = optionsContainer.children.length;
+
+        let optionDiv = document.createElement("div");
+        optionDiv.innerHTML = `
+            <label for="optionText${optionCount}${questionIndex}">Option ${optionCount + 1}:</label><br>
+            <input type="text" id="optionText${optionCount}${questionIndex}" name="questions[${questionIndex}].answers[${optionCount}].text" required/>
+            <input type="checkbox" name="questions[${questionIndex}].answers[${optionCount}].isCorrect" id="isCorrect${optionCount}${questionIndex}"/>
+            <label for="isCorrect${optionCount}${questionIndex}">Correct?</label><br><br>
+        `;
+        optionsContainer.appendChild(optionDiv);
+    }
+
+    function toggleOptions(questionIndex, type) {
+        let optionsContainer = document.getElementById("optionsContainer" + questionIndex);
+        if (type == "1") {  // True/False
+            optionsContainer.innerHTML = `
+                <div>
+                    <label for="optionText0${questionIndex}">True</label><br>
+                    <input type="text" id="optionText0${questionIndex}" name="questions[${questionIndex}].answers[0].text" value="True" required/>
+                    <input type="checkbox" name="questions[${questionIndex}].answers[0].isCorrect" id="isCorrect0${questionIndex}" value="true"/>
+                    <label for="isCorrect0${questionIndex}">Correct?</label><br><br>
+                </div>
+                <div>
+                    <label for="optionText1${questionIndex}">False</label><br>
+                    <input type="text" id="optionText1${questionIndex}" name="questions[${questionIndex}].answers[1].text" value="False" required/>
+                    <input type="checkbox" name="questions[${questionIndex}].answers[1].isCorrect" id="isCorrect1${questionIndex}" value="true"/>
+                    <label for="isCorrect1${questionIndex}">Correct?</label><br><br>
+                </div>
+            `;
+        } else {  // Multiple Choice
+            optionsContainer.innerHTML = `
+                <div>
+                    <label for="optionText0${questionIndex}">Option 1:</label><br>
+                    <input type="text" id="optionText0${questionIndex}" name="questions[${questionIndex}].answers[0].text" required/>
+                    <input type="checkbox" name="questions[${questionIndex}].answers[0].isCorrect" id="isCorrect0${questionIndex}"/>
+                    <label for="isCorrect0${questionIndex}">Correct?</label><br><br>
+                </div>
+                <div>
+                    <label for="optionText1${questionIndex}">Option 2:</label><br>
+                    <input type="text" id="optionText1${questionIndex}" name="questions[${questionIndex}].answers[1].text" required/>
+                    <input type="checkbox" name="questions[${questionIndex}].answers[1].isCorrect" id="isCorrect1${questionIndex}"/>
+                    <label for="isCorrect1${questionIndex}">Correct?</label><br><br>
+                </div>
+            `;
+        }
+    }
+    /*]]>*/
+</script>
 
 </body>
 </html>

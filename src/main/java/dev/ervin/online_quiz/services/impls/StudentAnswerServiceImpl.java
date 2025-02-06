@@ -53,4 +53,9 @@ public class StudentAnswerServiceImpl implements StudentAnswerService {
     public List<StudentAnswer> getAnswersByTestResult(Long testResultId) {
         return studentAnswerRepository.findAllByTestResultId(testResultId);
     }
+
+    @Override
+    public StudentAnswer save(StudentAnswer studentAnswer) {
+        return studentAnswerRepository.save(studentAnswer);
+    }
 }

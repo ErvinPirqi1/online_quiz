@@ -1,16 +1,20 @@
 package dev.ervin.online_quiz.services;
 
 import dev.ervin.online_quiz.dtos.QuizDto;
+import dev.ervin.online_quiz.models.Question;
 import dev.ervin.online_quiz.models.Quiz;
+import dev.ervin.online_quiz.models.User;
 
 import java.util.List;
 
 public interface QuizService {
-    Quiz create(QuizDto quizDto);  // Returns a QuizDto
+    Quiz create(Quiz quiz); // Parameter type is Quiz
 
     QuizDto update(Long id, QuizDto quizDto);  // Returns a QuizDto
 
     QuizDto getById(Long id);  // Returns QuizDto
+
+    Quiz getByIdInTake(Long id);
 
     List<QuizDto> getAll();  // Returns List<QuizDto>
 
@@ -21,6 +25,10 @@ public interface QuizService {
     List<QuizDto> getQuizzesCreatedByTeacher(String username);
 
     List<QuizDto> getQuizzesParticipatedByStudent(String username);
+
+    void toggleVisibility(Long id, QuizDto quizDto);
+
+    List<Question> getQuestionsByQuizId(Long quizId);
 }
 
 

@@ -6,7 +6,7 @@ import dev.ervin.online_quiz.infrastructure.mapping.SimpleMapper;
 import dev.ervin.online_quiz.models.User;
 import org.mapstruct.Mapper;
 
-@Mapper
+//@Mapper
 public interface UserMapper extends SimpleMapper<User, UserDto> {
     User fromUserRegistrationDto(UserRegistrationRequestDto userRegDto);
 }

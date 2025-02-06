@@ -54,31 +54,6 @@ public class User {
     @JoinColumn(name = "created_by")
     private User createdBy;
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     @ManyToOne
     @JoinColumn(name = "modified_by")
     private User modifiedBy;

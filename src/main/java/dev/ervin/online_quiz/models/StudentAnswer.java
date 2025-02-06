@@ -56,6 +56,5 @@ public class StudentAnswer {
     @Column(nullable = false)
     private Boolean isDeleted = false;
 
-    // Getters and setters...
 }
 

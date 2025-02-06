@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" th:replace="~{shared/_layout::layout('Modify Question', ~{::div#cont}, ~{::style#css}, ~{::script#scr})}">
+<head>
+    <meta charset="UTF-8">
+    <title>Modify Question</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style id="css">
+        .container {
+            max-width: 800px;
+            margin: 50px auto;
+        }
+
+        .card {
+            border: none;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+        }
+
+        .card-header {
+            background-color: #007bff;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .card-title {
+            font-size: 1.8rem;
+            font-weight: 500;
+        }
+
+        .card-body {
+            padding: 30px;
+        }
+
+        .form-label {
+            font-weight: 500;
+        }
+
+        .form-control,
+        .form-select {
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 10px;
+        }
+        .form-check-input{
+            margin-right: 5px;
+        }
+
+        .btn-primary {
+            background-color: #007bff;
+            border-color: #007bff;
+            border-radius: 5px;
+            padding: 10px 20px;
+            margin-right: 10px;
+        }
+
+        .btn-secondary {
+            background-color: #6c757d;
+            border-color: #6c757d;
+            border-radius: 5px;
+            padding: 10px 20px;
+        }
+        .error-message {
+            color: #dc3545;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        #optionsContainer div{
+            margin-bottom: 10px;
+        }
+    </style>
+    <script id="scr" th:inline="javascript">
+        /*<![CDATA[*/
+        function toggleOptions(type) {
+            let optionsContainer = document.getElementById("optionsContainer");
+            optionsContainer.innerHTML = ""; // Clear existing options
+
+            if (type == "1") {  // True/False
+                addOption(true, "True");
+                addOption(false, "False");
+            } else {  // Multiple Choice
+                addOption(false); // Add at least two options
+                addOption(false);
+            }
+        }
+
+        function addOption(isTrueFalse, initialText) {
+            let optionsContainer = document.getElementById("optionsContainer");
+            let optionCount = optionsContainer.children.length;
+
+            let optionDiv = document.createElement("div");
+
+            let text = initialText || ""; // Set text to initial value or empty string
+
+            optionDiv.innerHTML = `
+                <label for="optionText${optionCount}">Option ${optionCount + 1}:</label><br>
+                <input type="text" id="optionText${optionCount}" name="answers[${optionCount}].text" value="${text}" required/>
+                <input type="checkbox" name="answers[${optionCount}].isCorrect" id="isCorrect${optionCount}"/>
+                <label for="isCorrect${optionCount}">Correct?</label><br><br>
+            `;
+            optionsContainer.appendChild(optionDiv);
+        }
+
+        /*]]>*/
+    </script>
+</head>
+<body>
+
+<div class="container mt-5" id="cont">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title">Modify Question</h5>
+                </div>
+                <div class="card-body">
+                    <form th:action="@{/quiz/update/{questionId}(questionId=${question.id})}" method="post" th:object="${question}">
+                        <input type="hidden" name="quizId" th:value="${quizId}" />
+
+                        <div class="mb-3">
+                            <label for="questionText" class="form-label">Question:</label>
+                            <input type="text" id="questionText" name="questionText" th:field="*{questionText}" class="form-control" required/>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="questionType" class="form-label">Type:</label>
+                            <select id="questionType" name="questionType" th:field="*{questionType}" class="form-select" onchange="toggleOptions(this.value)" required>
+                                <option value="0">Multiple Choice</option>
+                                <option value="1">True/False</option>
+                            </select>
+                        </div>
+
+                        <div id="optionsContainer">
+                            <th:block th:each="answer, iterStat : ${question.answers}">
+                                <div class="mb-3">
+                                    <label th:for="'optionText' + ${iterStat.index}" class="form-label">Option <span th:text="${iterStat.index + 1}"></span>:</label><br>
+                                    <input type="text" th:id="'optionText' + ${iterStat.index}" name="answers[${iterStat.index}].text" th:value="${answer.text}" class="form-control" required/>
+                                    <input type="checkbox" name="answers[${iterStat.index}].isCorrect" th:checked="${answer.isCorrect}" class="form-check-input"/>
+                                    <label th:for="'isCorrect' + ${iterStat.index}" class="form-check-label">Correct?</label>
+                                </div>
+                            </th:block>
+                        </div>
+
+                        <div class="d-flex justify-content-end">
+                            <button type="button" class="btn btn-primary" onclick="addOption()">Add Another Option</button>
+                            <button type="submit" class="btn btn-primary">Update Question</button>
+                            <a onclick="window.history.back()" class="btn btn-secondary">Back</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script id="scr">
+    /* Your scripts if any */
+</script>
+
+</body>
+</html>

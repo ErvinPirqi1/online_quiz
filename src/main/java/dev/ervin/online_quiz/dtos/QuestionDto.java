@@ -8,9 +8,20 @@ import java.util.List;
 @Getter
 @Setter
 public class QuestionDto {
-    private long id;
+    private Long id;
+    private Long quizId;
     private String questionText;
-    private Short questionType; // 0 = Multiple Choice, 1 = True/False
-    private List<OptionDto> options;
-    private Integer correctAnswer; // Index of the correct answer
+    private Short questionType;
+    private List<AnswerDto> answers;
+
+
+    @Override
+    public String toString() {
+        return "QuestionDto{" +
+                "id=" + id +
+                ", questionText='" + questionText + '\'' +
+                ", questionType=" + questionType +
+                ", answers=" + answers +
+                '}';
+    }
 }

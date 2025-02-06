@@ -5,6 +5,8 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class OptionDto {
+public class AnswerDto {
+    private Long id;
     private String text;
+    private Boolean isCorrect;
 }

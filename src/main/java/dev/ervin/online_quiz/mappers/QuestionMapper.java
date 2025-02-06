@@ -1,10 +1,11 @@
 package dev.ervin.online_quiz.mappers;
 
-import dev.ervin.online_quiz.infrastructure.mapping.SimpleMapper;
-import dev.ervin.online_quiz.models.Question;
 import dev.ervin.online_quiz.dtos.QuestionDto;
-import org.mapstruct.Mapper;
+import dev.ervin.online_quiz.models.Question;
 
-@Mapper(componentModel = "spring") // Use Spring to automatically inject the mapper
-public interface QuestionMapper extends SimpleMapper<Question,QuestionDto> {
+public interface QuestionMapper {
+    QuestionDto toDto(Question question);
+    Question toEntity(QuestionDto questionDto);
+
+    QuestionDto mapToDtoWithQuizId(Question question);
 }
