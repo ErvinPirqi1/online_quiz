@@ -38,6 +38,12 @@ public class Quiz {
     @Version
     private Integer version;
 
+    @Column(nullable = false)
+    private Short status; // 0=active, 1=archived
+
+    @Version
+    private Integer version;
+
     @ManyToMany
     @JoinTable(
             name = "quiz_participation",
