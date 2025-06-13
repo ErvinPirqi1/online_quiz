@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -166,6 +167,68 @@ public class QuestionServiceImpl implements QuestionService {
         }
         return null;
     }
+
+    public boolean updateQuestionWithAnswers(Long questionId, QuestionDto questionDto, User currentUser) {
+        Optional<Question> optionalQuestion = questionRepository.findById(questionId);
+        if (optionalQuestion.isEmpty()) {
+            return false;
+        }
+
+        Question question = optionalQuestion.get();
+
+        // Update question fields (match your DTO fields)
+        question.setQuestion(questionDto.getQuestionText());
+        question.setQuestionType(questionDto.getQuestionType());
+        question.setModifiedAt(LocalDateTime.now());
+        question.setModifiedBy(currentUser);
+
+        List<AnswerDto> answerDtos = questionDto.getAnswers();
+        if (answerDtos != null) {
+            // Get existing answers for this question
+            List<Answer> existingAnswers = answerRepository.findByQuestionId(questionId);
+
+            // Map existing answers by id for easy lookup
+            Map<Long, Answer> existingAnswerMap = existingAnswers.stream()
+                    .collect(Collectors.toMap(Answer::getId, a -> a));
+
+            for (AnswerDto dto : answerDtos) {
+                if (dto.getId() != null && existingAnswerMap.containsKey(dto.getId())) {
+                    // Update existing answer
+                    Answer answer = existingAnswerMap.get(dto.getId());
+                    answer.setOptionText(dto.getText());
+                    answer.setIsCorrect(dto.getIsCorrect());
+                    answer.setModifiedAt(LocalDateTime.now());
+                    answer.setModifiedBy(currentUser);
+                    answer.setIsDeleted(false);
+                    answerRepository.save(answer);
+                    existingAnswerMap.remove(dto.getId());
+                } else {
+                    // New answer
+                    Answer newAnswer = new Answer();
+                    newAnswer.setQuestion(question);
+                    newAnswer.setOptionText(dto.getText());
+                    newAnswer.setIsCorrect(dto.getIsCorrect());
+                    newAnswer.setCreatedAt(LocalDateTime.now());
+                    newAnswer.setCreatedBy(currentUser);
+                    newAnswer.setIsDeleted(false);
+                    answerRepository.save(newAnswer);
+                }
+            }
+
+            // Mark any existing answers not included in update as deleted
+            for (Answer answerToDelete : existingAnswerMap.values()) {
+                answerToDelete.setIsDeleted(true);
+                answerToDelete.setModifiedAt(LocalDateTime.now());
+                answerToDelete.setModifiedBy(currentUser);
+                answerRepository.save(answerToDelete);
+            }
+        }
+
+        questionRepository.save(question);
+        return true;
+    }
+
+
 
 
     @Override

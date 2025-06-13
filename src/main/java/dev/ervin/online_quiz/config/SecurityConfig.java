@@ -6,6 +6,7 @@ import dev.ervin.online_quiz.services.impls.UserServiceImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -37,12 +38,24 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
+                .cors(AbstractHttpConfigurer::disable)  // Enable CORS support properly
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(authz -> authz
+                .authorizeHttpRequests(auth -> auth
+                        // Allow OPTIONS requests without authentication (CORS preflight)
+                        .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
+
+                        // Public endpoints
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/quizzes/**").permitAll()
                         .requestMatchers("/api/users/me").permitAll()
+
+                        // Homepage and quizzes accessible to all
+                        .requestMatchers("/", "/api/quizzes", "/api/quizzes/**").permitAll()
+
+                        // Only TEACHER & ADMIN can create quizzes
+                        .requestMatchers("/api/quizzes").hasAnyRole("TEACHER", "ADMIN")
+
+                        // All other requests need authentication
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class);

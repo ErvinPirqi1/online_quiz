@@ -1,9 +1,6 @@
 package dev.ervin.online_quiz.controllers;
 
-import dev.ervin.online_quiz.dtos.AnswerDto;
-import dev.ervin.online_quiz.dtos.QuestionDto;
-import dev.ervin.online_quiz.dtos.QuizDto;
-import dev.ervin.online_quiz.dtos.UserDto;
+import dev.ervin.online_quiz.dtos.*;
 import dev.ervin.online_quiz.helpers.QuestionForm;
 import dev.ervin.online_quiz.mappers.impls.AnswerMapper;
 import dev.ervin.online_quiz.models.*;
@@ -12,6 +9,7 @@ import dev.ervin.online_quiz.repositories.UserRepository;
 import dev.ervin.online_quiz.services.*;
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -22,6 +20,7 @@ import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
@@ -64,24 +63,35 @@ public class QuizApiController {
         return ResponseEntity.ok(quiz);
     }
 
-    // Create new quiz
     @PostMapping("")
-    public ResponseEntity<?> createQuiz(@RequestBody @Valid QuizDto quizDto, @AuthenticationPrincipal UserDetails userDetails) {
-        if (userDetails == null) return ResponseEntity.status(401).body("Unauthorized");
+    public ResponseEntity<?> createQuiz(@RequestBody @Valid CreateQuizDto dto,
+                                        @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Unauthorized");
+        }
 
-        User creator = userService.getUserByUsername(userDetails.getUsername());
+        Optional<User> optionalUser = userRepository.findByUsername(userDetails.getUsername());
+        if (optionalUser.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("User not found");
+        }
+        User currentUser = optionalUser.get();
+
         Quiz quiz = new Quiz();
-        quiz.setCategory(quizDto.getCategory());
-        quiz.setDescription(quizDto.getDescription());
-        quiz.setTitle(quizDto.getTitle());
-        quiz.setVisibility(quizDto.getVisibility());
-        quiz.setStatus(quizDto.getStatus());
-        quiz.setCreatedBy(creator);
-        quiz.setUser(creator);
+        quiz.setTitle(dto.getTitle());
+        quiz.setDescription(dto.getDescription());
+        quiz.setCategory(dto.getCategory());
+        quiz.setVisibility(dto.getVisibility());
+        quiz.setStatus((short) 1); // or dto.getStatus() if you want to allow it
 
-        Quiz savedQuiz = quizService.create(quiz);
+        quiz.setUser(currentUser);
+        quiz.setCreatedBy(currentUser);
+
+        Quiz savedQuiz = quizService.create(quiz);  // Use your service here
+
         return ResponseEntity.ok(savedQuiz.getId());
     }
+
+
 
     // Update quiz
     @PutMapping("/{quizId}")
@@ -100,6 +110,26 @@ public class QuizApiController {
         return ResponseEntity.ok("Updated successfully");
     }
 
+    @PutMapping("/{quizId}/questions/{questionId}")
+    public ResponseEntity<?> updateQuestionWithAnswers(
+            @PathVariable Long quizId,
+            @PathVariable Long questionId,
+            @RequestBody QuestionDto questionDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        User currentUser = userService.getUserByUsername(userDetails.getUsername());
+        if (currentUser == null) {
+            return ResponseEntity.status(401).body("Unauthorized");
+        }
+
+        boolean updated = questionService.updateQuestionWithAnswers(questionId, questionDto, currentUser);
+        if (!updated) {
+            return ResponseEntity.status(404).body("Question not found or update failed");
+        }
+
+        return ResponseEntity.ok("Question and answers updated successfully");
+    }
+
     // Toggle visibility of a quiz
     @PostMapping("/{quizId}/visibility/toggle")
     public ResponseEntity<?> toggleVisibility(@PathVariable Long quizId, @AuthenticationPrincipal UserDetails userDetails) {
@@ -112,11 +142,17 @@ public class QuizApiController {
         return ResponseEntity.ok("Visibility toggled");
     }
 
-    // Add questions to a quiz
     @PostMapping("/{quizId}/questions")
     public ResponseEntity<?> createQuestions(@PathVariable Long quizId, @RequestBody QuestionForm questionForm, @AuthenticationPrincipal UserDetails userDetails) {
         if (questionForm == null || questionForm.getQuestions() == null) {
             return ResponseEntity.badRequest().body("Invalid question form");
+        }
+
+        User creator = userService.getUserByUsername(userDetails.getUsername());
+        Quiz quiz = quizService.getByIdInTake(quizId);
+
+        if (quiz == null || !quiz.getUser().getId().equals(creator.getId())) {
+            return ResponseEntity.status(403).body("Only quiz creator can add questions.");
         }
 
         for (QuestionDto questionDto : questionForm.getQuestions()) {
@@ -127,28 +163,60 @@ public class QuizApiController {
         return ResponseEntity.ok("Questions created");
     }
 
-    // Get quiz details including questions and answers
+
     @GetMapping("/{quizId}/details")
-    public ResponseEntity<?> getQuizDetails(@PathVariable Long quizId) {
+    public ResponseEntity<?> getQuizDetails(@PathVariable Long quizId, @AuthenticationPrincipal UserDetails userDetails) {
+        System.out.println("=== getQuizDetails called ===");
+        System.out.println("Path variable quizId: " + quizId);
+        System.out.println("Authenticated userDetails: " + userDetails);
+
+        if (userDetails == null) {
+            System.out.println("UserDetails is null - Unauthorized");
+            return ResponseEntity.status(401).body("Unauthorized - no user details");
+        }
+
         QuizDto quiz = quizService.getById(quizId);
-        if (quiz == null) return ResponseEntity.notFound().build();
+        System.out.println("Quiz fetched from service: " + quiz);
+        if (quiz == null) {
+            System.out.println("Quiz not found with id: " + quizId);
+            return ResponseEntity.notFound().build();
+        }
+
+        User currentUser = userService.getUserByUsername(userDetails.getUsername());
+        if (currentUser == null) {
+            System.out.println("Current user not found by username: " + userDetails.getUsername());
+            return ResponseEntity.status(401).body("Unauthorized - user not found");
+        }
+        System.out.println("Current user from DB: " + currentUser.getUsername() + ", id: " + currentUser.getId());
+
+        boolean isOwner = quiz.getUserId() != null && quiz.getUserId().equals(currentUser.getId());
+        boolean isAdmin = hasRole(userDetails, "ADMIN");
+        System.out.println("Authorization check: isOwner=" + isOwner + ", isAdmin=" + isAdmin);
+
+        if (!isOwner && !isAdmin) {
+            System.out.println("Access denied: user is neither owner nor admin");
+            return ResponseEntity.status(403).body("Forbidden");
+        }
 
         List<QuestionDto> questions = questionService.getAllQuestionsByQuiz(quiz.getId());
+        System.out.println("Number of questions fetched: " + (questions == null ? 0 : questions.size()));
 
         for (QuestionDto question : questions) {
             List<Answer> answers = questionService.getAnswersByQuestionId(question.getId());
-            // Use your AnswerMapper to convert to DTO
             List<AnswerDto> answerDtos = answers.stream()
                     .map(AnswerMapper::toDto)
                     .collect(Collectors.toList());
             question.setAnswers(answerDtos);
         }
 
+        System.out.println("Returning quiz details with questions and answers");
         return ResponseEntity.ok(Map.of(
                 "quiz", quiz,
                 "questions", questions
         ));
     }
+
+
 
 
     // Get questions by quiz ID
@@ -254,6 +322,7 @@ public class QuizApiController {
 
     @GetMapping("/my")
     public ResponseEntity<List<QuizDto>> getMyQuizzes(@AuthenticationPrincipal UserDetails userDetails) {
+        System.out.println("User details: " + userDetails);
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
@@ -284,6 +353,10 @@ public class QuizApiController {
         return ResponseEntity.ok(quizzes);
     }
 
+    private boolean hasRole(UserDetails userDetails, String role) {
+        return userDetails.getAuthorities().stream()
+                .anyMatch(a -> a.getAuthority().equals("ROLE_" + role));
+    }
 
 
 }

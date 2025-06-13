@@ -47,12 +47,14 @@ public class QuizMapperImpl implements QuizMapper {
         quizDto.setModifiedByUsername(quiz.getModifiedBy() != null ? quiz.getModifiedBy().getUsername() : null);
         quizDto.setCreatedByUsername(quiz.getCreatedBy() != null ? quiz.getCreatedBy().getUsername() : null);
 
-
+        // **Add these lines:**
         if (quiz.getCreatedBy() != null) {
-            quizDto.setCreatedByUsername(quiz.getCreatedBy().getUsername());
+            quizDto.setCreatedBy(quiz.getCreatedBy().getId());  // Assuming createdBy is a Long user id
+            quizDto.setUserId(quiz.getCreatedBy().getId());     // If userId means owner id (createdBy)
         }
 
         return quizDto;
     }
+
 
 }
