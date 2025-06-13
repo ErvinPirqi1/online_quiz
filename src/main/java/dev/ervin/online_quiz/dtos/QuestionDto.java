@@ -5,6 +5,7 @@ import lombok.Setter;
 
 import java.util.List;
 
+// QuestionDto.java
 @Getter
 @Setter
 public class QuestionDto {
@@ -14,14 +15,13 @@ public class QuestionDto {
     private Short questionType;
     private List<AnswerDto> answers;
 
+    public QuestionDto() {}
 
-    @Override
-    public String toString() {
-        return "QuestionDto{" +
-                "id=" + id +
-                ", questionText='" + questionText + '\'' +
-                ", questionType=" + questionType +
-                ", answers=" + answers +
-                '}';
+    public QuestionDto(Long id, Long quizId, String questionText, Short questionType, List<AnswerDto> answers) {
+        this.id = id;
+        this.quizId = quizId;
+        this.questionText = questionText;
+        this.questionType = questionType;
+        this.answers = answers;
     }
 }

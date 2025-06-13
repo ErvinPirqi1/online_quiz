@@ -29,12 +29,6 @@ public interface QuizService {
     void toggleVisibility(Long id, QuizDto quizDto);
 
     List<Question> getQuestionsByQuizId(Long quizId);
-
-    List<QuizDto> getQuizzesCreatedByUser(String username);
-
-    List<QuizDto> getQuizzesParticipatedByUser(String username);
-
-    List<QuizDto> getQuizzesNotCreatedOrParticipatedByUser(String username);
 }
 
 

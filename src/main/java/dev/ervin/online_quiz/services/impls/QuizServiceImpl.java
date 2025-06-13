@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -136,6 +137,43 @@ public class QuizServiceImpl implements QuizService {
     @Override
     public List<Question> getQuestionsByQuizId(Long quizId) {
         return questionRepository.findByQuizId(quizId);
+    }
+
+    @Override
+    public List<QuizDto> getQuizzesCreatedByUser(String username) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        List<Quiz> quizzes = quizRepository.findByCreatedBy(user);
+        return quizzes.stream()
+                .map(quizMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<QuizDto> getQuizzesParticipatedByUser(String username) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        List<Quiz> quizzes = quizRepository.findByParticipantsContaining(user);
+        return quizzes.stream()
+                .map(quizMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<QuizDto> getQuizzesNotCreatedOrParticipatedByUser(String username) {
+        User user = userRepository.findByUsername(username).orElse(null);
+        if (user == null) {
+            return Collections.emptyList();
+        }
+        // This will find all quizzes where createdBy != user AND user not in participants
+        List<Quiz> quizzes = quizRepository.findByCreatedByNotAndParticipantsNotContaining(user, user);
+        return quizzes.stream()
+                .map(quizMapper::toDto)
+                .collect(Collectors.toList());
     }
 
 

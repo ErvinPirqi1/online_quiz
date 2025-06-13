@@ -1,6 +1,7 @@
 package dev.ervin.online_quiz.repositories;
 
 import dev.ervin.online_quiz.models.Quiz;
+import dev.ervin.online_quiz.models.User;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -26,6 +27,12 @@ public interface QuizRepository extends JpaRepository<Quiz, Long> {
 
     @Override
     Optional<Quiz> findById(Long id); // Add logging here
+
+    List<Quiz> findByCreatedBy(User user);
+
+    List<Quiz> findByParticipantsContaining(User user);
+
+    List<Quiz> findByCreatedByNotAndParticipantsNotContaining(User user, User user1);
 
 //    Optional<Quiz> findByIdWithLog(Long id);
 }

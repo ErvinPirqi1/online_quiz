@@ -1,5 +1,6 @@
 package dev.ervin.online_quiz.controllers.temporary;
 
+import dev.ervin.online_quiz.dtos.UserLoginDto;
 import dev.ervin.online_quiz.dtos.UserRegistrationRequestDto;
 import dev.ervin.online_quiz.models.User;
 import dev.ervin.online_quiz.security.JwtUtil;
@@ -11,11 +12,14 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,16 +41,29 @@ public class AuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<?> login(@RequestBody UserLoginDto loginRequest) {
         try {
+            // Retrieve user from the database
+            User user = userService.getUserByUsername(loginRequest.getUsername());
+            if (user == null || !passwordEncoder.matches(loginRequest.getPassword(), user.getPassword())) {
+                System.out.println("loginRequest.getPassword(): " + loginRequest.getPassword());
+                System.out.println("Stored hashed password: " + user.getPassword());
+                System.out.println("Password match result: " + passwordEncoder.matches(loginRequest.getPassword(), user.getPassword()));
+                System.out.println(passwordEncoder.encode("admin123"));
+
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new AuthResponse("Invalid username or password", null));
+            }
+
+
+            // Set up authentication token with role-based authorities
             UsernamePasswordAuthenticationToken authToken =
-                    new UsernamePasswordAuthenticationToken(loginRequest.getUsername(), loginRequest.getPassword());
+                    new UsernamePasswordAuthenticationToken(user.getUsername(), user.getPassword(), getAuthorities(user));
 
-            Authentication authentication = authenticationManager.authenticate(authToken);
-            SecurityContextHolder.getContext().setAuthentication(authentication);
+            SecurityContextHolder.getContext().setAuthentication(authToken);
 
-            // Generate JWT
-            String token = jwtUtil.generateToken(loginRequest.getUsername());
+            // Generate JWT including user role
+            String token = jwtUtil.generateToken(user.getUsername(), user.getRole());
 
             return ResponseEntity.ok(new AuthResponse("Login successful", token));
         } catch (AuthenticationException ex) {
@@ -54,6 +71,13 @@ public class AuthController {
                     .body(new AuthResponse("Invalid username or password", null));
         }
     }
+
+    private List<GrantedAuthority> getAuthorities(User user) {
+        return List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+    }
+
+
+
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@Valid @RequestBody UserRegistrationRequestDto dto) {

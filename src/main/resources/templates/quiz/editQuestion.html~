@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Modify Question</title>
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        function toggleOptions(type) {
+            let optionsContainer = document.getElementById("optionsContainer");
+            optionsContainer.innerHTML = ""; // Clear existing options
+
+            if (type == "1") {  // True/False
+                addOption(true, "True");
+                addOption(false, "False");
+            } else {  // Multiple Choice
+                addOption(false); // Add at least two options
+                addOption(false);
+            }
+        }
+
+        function addOption(isTrueFalse, initialText) {
+            let optionsContainer = document.getElementById("optionsContainer");
+            let optionCount = optionsContainer.children.length;
+
+            let optionDiv = document.createElement("div");
+
+            let text = initialText || ""; // Set text to initial value or empty string
+
+            optionDiv.innerHTML = `
+                <label for="optionText${optionCount}">Option ${optionCount + 1}:</label><br>
+                <input type="text" id="optionText${optionCount}" name="answers[${optionCount}].text" value="${text}" required/>
+                <input type="checkbox" name="answers[${optionCount}].isCorrect" id="isCorrect${optionCount}"/>
+                <label for="isCorrect${optionCount}">Correct?</label><br><br>
+            `;
+            optionsContainer.appendChild(optionDiv);
+        }
+
+        /*]]>*/
+    </script>
+</head>
+<body>
+
+<h2>Modify Question</h2>
+
+<form th:action="@{/quiz/update/{questionId}(questionId=${question.id})}" method="post" th:object="${question}">
+    <input type="hidden" name="quizId" th:value="${quizId}" />
+
+    <label for="questionText">Question:</label><br>
+    <input type="text" id="questionText" name="questionText" th:field="*{questionText}" required/><br><br>
+
+    <label for="questionType">Type:</label><br>
+    <select id="questionType" name="questionType" th:field="*{questionType}" onchange="toggleOptions(this.value)" required>
+        <option value="0">Multiple Choice</option>
+        <option value="1">True/False</option>
+    </select><br><br>
+
+    <div id="optionsContainer">
+        <th:block th:each="answer, iterStat : ${question.answers}">
+            <div>
+                <label th:for="'optionText' + ${iterStat.index}">Option <span th:text="${iterStat.index + 1}"></span>:</label><br>
+                <input type="text" th:id="'optionText' + ${iterStat.index}" name="answers[${iterStat.index}].text" th:value="${answer.text}" required/>
+                <input type="checkbox" name="answers[${iterStat.index}].isCorrect" th:checked="${answer.isCorrect}"/>
+                <label th:for="'isCorrect' + ${iterStat.index}">Correct?</label><br><br>
+            </div>
+        </th:block>
+    </div>
+
+    <button type="button" onclick="addOption()">Add Another Option</button> <--- Add Option Button
+    <button type="submit">Update Question</button>
+</form>
+
+</body>
+</html>
